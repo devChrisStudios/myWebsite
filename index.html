@@ -3,86 +3,156 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Domain Test Landing Page</title>
+    <title>S Y S T E M | A C C E S S</title>
+    <!-- Load Space Mono font for the classic terminal look -->
+    <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
     <style>
-        /* CSS for the cool look */
+        /* Custom CSS for the "Hacker" Aesthetic */
         body, html {
             height: 100%;
             margin: 0;
-            font-family: 'Arial', sans-serif;
-            color: #ffffff; /* White text */
-        }
-
-        .container {
-            /* Full screen background with a subtle gradient */
-            background: linear-gradient(135deg, #4CAF50 0%, #2196F3 100%);
-            height: 100%;
+            overflow: hidden; /* Prevent scroll bars */
+            background-color: #0d1117; /* Very dark background */
+            color: #00ff41; /* Neon green text */
+            font-family: 'Space Mono', monospace;
             display: flex;
-            flex-direction: column;
             justify-content: center;
             align-items: center;
-            text-align: center;
+            font-size: 14px;
+        }
+
+        .terminal-container {
+            width: 90%;
+            max-width: 800px;
+            height: 90%;
+            max-height: 600px;
+            border: 2px solid #00ff41;
+            box-shadow: 0 0 15px #00ff41, inset 0 0 15px rgba(0, 255, 65, 0.4); /* Glow effect */
             padding: 20px;
+            overflow-y: auto;
             box-sizing: border-box;
+            background-color: rgba(0, 0, 0, 0.6); /* Semi-transparent black */
         }
 
-        h1 {
-            font-size: 3.5em; /* Large main heading */
-            margin-bottom: 0.1em;
-            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.4); /* Text shadow for depth */
-        }
-
-        p {
-            font-size: 1.5em;
-            opacity: 0.9;
-        }
-
-        .cta-button {
-            display: inline-block;
-            margin-top: 20px;
-            padding: 12px 25px;
-            background-color: #FFC107; /* Bright accent color */
-            color: #1a1a1a;
-            text-decoration: none;
-            border-radius: 50px; /* Pill shape */
+        /* Styling for the blinking cursor */
+        .cursor {
             font-weight: bold;
-            font-size: 1.1em;
-            transition: background-color 0.3s ease, transform 0.3s ease;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+            animation: blink 0.8s infinite;
         }
 
-        .cta-button:hover {
-            background-color: #FFEB3B; /* Lighter on hover */
-            transform: scale(1.05); /* Slight lift effect */
+        @keyframes blink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0; }
         }
 
-        footer {
-            position: absolute;
-            bottom: 10px;
-            width: 100%;
-            text-align: center;
-            font-size: 0.8em;
-            color: rgba(255, 255, 255, 0.7);
+        /* The actual output lines */
+        .line {
+            white-space: pre-wrap; /* Preserve formatting but allow wrap */
+            line-height: 1.4;
+        }
+
+        /* Specific colors for "system messages" */
+        .info { color: #87ceeb; } /* Light Blue */
+        .success { color: #32cd32; } /* Lime Green */
+        .error { color: #ff6347; } /* Tomato Red */
+
+        /* Responsive adjustments */
+        @media (max-width: 600px) {
+            .terminal-container {
+                width: 95%;
+                height: 95%;
+                padding: 10px;
+                font-size: 12px;
+            }
+            h1 { font-size: 1.5em; }
         }
     </style>
 </head>
 <body>
 
-    <div class="container">
-        <header>
-            <h1>Domain Launch Successful! 🚀</h1>
-            <p>Your new domain is working perfectly. This is the first step to something amazing.</p>
-        </header>
-
-        <main>
-            <p>This is a placeholder for a future cool website. Check back soon for updates.</p>
-            <a href="#" class="cta-button">Get Notified When We Go Live</a>
-        </main>
-
-        <footer>
-            <p>&copy; 2025 My Super Cool New Project</p>
-        </footer>
+    <div id="terminal" class="terminal-container">
+        <div id="output"></div>
     </div>
+
+    <script>
+        // JavaScript for the typewriter/terminal simulation effect
+        const outputElement = document.getElementById('output');
+        const lines = [
+            "<span class='info'>[INITIALIZING]</span> Boot sequence engaged... Checking system integrity.",
+            "<span class='success'>[STATUS]</span> Mainframe connection established. Ping: 0.003ms.",
+            "Attemping secure handshake with Target_System_01...",
+            "<span class='error'>[ACCESS DENIED]</span> Firewall V7.1 detected. Initiating Bypass Protocol: WRAITH.",
+            "...",
+            "Compiling exploit payloads (Trojan: Helios, Worm: Cerberus)...",
+            "<span class='info'>[DATA STREAM]</span> Analyzing packet headers... Decrypting RSA-2048 key block.",
+            "Key successfully extracted: 4B6F-2C9A-0D5E-F7B1",
+            "Establishing unauthorized SSH tunnel on port 22. Status: <span class='success'>CONNECTED</span>.",
+            "Downloading classified file 'Project_Chimera_Manifest.dat' (12.5GB)... 1.2% complete.",
+            "Filtering intrusion detection system logs...",
+            "34% complete. Estimated time to completion: 01:45:22.",
+            "<span class='info'>[WARNING]</span> Secondary Security Daemon activated. Increased latency.",
+            "Rerouting connection through Icelandic proxy (ID: 7421)...",
+            "98% complete. Transfer rate fluctuating...",
+            "<span class='success'>[FILE DOWNLOAD COMPLETE]</span> All traces wiped. Exiting System.",
+            "Connection closed.",
+            "C:\\USER\\CONSOLE> <span class='cursor'>_</span>"
+        ];
+
+        let lineIndex = 0;
+        const typingDelay = 50; // Milliseconds per character
+        const lineDelay = 1000; // Milliseconds between lines
+
+        // Function to simulate typing out a single line
+        function typeLine(text, callback) {
+            let charIndex = 0;
+            const lineDiv = document.createElement('div');
+            lineDiv.className = 'line';
+            outputElement.appendChild(lineDiv);
+
+            function typeChar() {
+                if (charIndex < text.length) {
+                    // Use innerHTML to handle the span tags for coloring
+                    lineDiv.innerHTML += text.charAt(charIndex);
+                    charIndex++;
+                    setTimeout(typeChar, typingDelay);
+                } else {
+                    // Line complete, run the callback (usually to start the next line)
+                    if (callback) {
+                        callback();
+                    }
+                }
+            }
+
+            typeChar();
+        }
+
+        // Function to process all lines sequentially
+        function processLines() {
+            if (lineIndex < lines.length) {
+                // If the last line contains the cursor placeholder, handle it differently
+                if (lines[lineIndex].includes("<span class='cursor'>_</span>")) {
+                    const finalLine = document.createElement('div');
+                    finalLine.className = 'line';
+                    finalLine.innerHTML = lines[lineIndex];
+                    outputElement.appendChild(finalLine);
+                    return; // Stop the sequence
+                }
+
+                typeLine(lines[lineIndex], () => {
+                    lineIndex++;
+                    // Scroll to the bottom to keep the current line visible
+                    outputElement.scrollTop = outputElement.scrollHeight;
+                    // Wait before starting the next line
+                    setTimeout(processLines, lineDelay);
+                });
+            }
+        }
+
+        // Start the simulation when the page loads
+        document.addEventListener('DOMContentLoaded', () => {
+            processLines();
+        });
+    </script>
 
 </body>
 </html>
