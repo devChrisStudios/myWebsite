@@ -9,857 +9,800 @@
     <!-- Load Space Mono font for the classic terminal look -->
     <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
     <style>
+        /* Enable smooth scrolling for anchor links */
+        html {
+            scroll-behavior: smooth;
+        }
+
         /* Configure Tailwind to use the Space Mono font when available */
         :root {
             --font-mono: 'Space Mono', monospace;
-            --main-color: #00ff41; /* Default Green */
-            --info-color: #87ceeb;
-            --success-color: #32cd32;
+            --main-color: #ffb861; /* Amber/Orange Default */
+            --info-color: #f7a049;
+            --success-color: #00ff41;
             --error-color: #ff6347;
-            --prompt-color: #ffc107;
+            --prompt-color: #93d6e5;
         }
 
         /* Custom CSS for the Terminal Interface (Hacker Aesthetic) */
         .terminal-theme {
-            background-color: #000000;
+            background-color: #0d0101; /* Very dark red/black background */
             color: var(--main-color);
             font-family: var(--font-mono);
+            /* CRT Glow Effect */
+            text-shadow: 0 0 7px rgba(255, 184, 97, 0.7); /* Soft amber glow */
+            /* Scanline Effect */
+            background-image: linear-gradient(
+                rgba(0, 0, 0, 0.2) 2px,
+                transparent 2px
+            );
+            background-size: 100% 4px; /* Creates subtle horizontal lines */
         }
 
         .terminal-container {
             width: 95%;
-            max-width: 900px;
-            height: 95%;
-            max-height: 700px;
+            max-width: 1024px;
+            height: 95vh;
+            max-height: 800px;
             border: 2px solid var(--main-color);
-            /* Initial shadow based on default color - this will be updated dynamically */
-            box-shadow: 0 0 20px rgba(0, 255, 65, 0.7), inset 0 0 10px rgba(0, 255, 65, 0.3);
-            background-color: rgba(0, 0, 0, 0.85);
-            display: flex;
-            flex-direction: column;
-            border-radius: 8px;
-            overflow: hidden;
-            box-sizing: border-box;
-            transition: box-shadow 0.5s ease, border-color 0.5s ease;
+            box-shadow: 0 0 15px var(--main-color);
         }
 
-        #output-area {
-            flex-grow: 1;
-            padding: 15px;
-            overflow-y: auto;
-            white-space: pre-wrap;
-            line-height: 1.4;
-        }
-
-        #input-line {
-            display: flex;
-            padding: 10px 15px;
-            border-top: 2px solid var(--main-color);
-            background-color: rgba(0, 0, 0, 0.95);
-        }
-
-        #prompt {
-            color: var(--prompt-color);
-            margin-right: 5px;
-            user-select: none;
-            flex-shrink: 0;
-        }
-
-        #command-input {
-            flex-grow: 1;
-            background: transparent;
-            border: none;
+        .terminal-header {
+            background-color: rgba(255, 184, 97, 0.1);
             color: var(--main-color);
-            font-family: var(--font-mono);
-            font-size: 14px;
-            outline: none;
-            caret-color: var(--main-color);
-            padding: 0;
+            border-bottom: 2px solid var(--main-color);
+            display: flex; /* Ensure header content is flexible */
+            justify-content: space-between;
         }
 
-        /* Custom colors using CSS variables */
-        .info { color: var(--info-color); }
-        .success { color: var(--success-color); }
-        .error { color: var(--error-color); }
-        .user-input { color: #ffffff; }
-
-        .blink {
-            animation: blinker 1s linear infinite;
+        .terminal-output, .terminal-input {
+            overflow-y: auto;
+            word-wrap: break-word;
+            padding: 0.5rem 1rem;
         }
-        @keyframes blinker {
+
+        .terminal-input-line {
+            display: flex;
+            align-items: flex-start;
+            flex-wrap: nowrap;
+            padding: 0.25rem 0;
+        }
+
+        .prompt-char {
+            color: var(--prompt-color);
+            flex-shrink: 0;
+            padding-right: 0.5rem;
+        }
+
+        /* Styling for different message types */
+        .info-message { color: var(--info-color); }
+        .success-message { color: var(--success-color); }
+        .error-message { color: var(--error-message); }
+        .typing-effect::after {
+            content: '_';
+            animation: blink 0.7s infinite;
+        }
+
+        @keyframes blink {
             50% { opacity: 0; }
         }
 
-        /* Settings Sidebar Styles */
-        #settings-sidebar {
-            position: fixed;
-            top: 0;
-            right: 0;
-            width: 300px;
-            height: 100vh;
-            background-color: #1a1a1a;
+        /* Sidebar Styling */
+        .settings-sidebar {
+            background-color: #1a0808; /* Darker, themed background */
             color: var(--main-color);
-            font-family: var(--font-mono);
-            transform: translateX(300px); /* Start off-screen */
-            transition: transform 0.3s ease-in-out;
-            padding: 20px;
-            /* Dynamic shadow will be applied by JS based on main-color */
-            box-shadow: -5px 0 15px rgba(0, 255, 65, 0.5); 
-            z-index: 50;
+            border-left: 2px solid var(--main-color);
         }
 
-        #settings-sidebar.open {
-            transform: translateX(0); /* Slide in */
+        .color-option {
+            width: 1.5rem;
+            height: 1.5rem;
+            border-radius: 9999px; /* circle */
+            cursor: pointer;
+            transition: transform 0.2s;
+            border: 2px solid transparent;
+        }
+        .color-option:hover {
+            transform: scale(1.1);
+            border-color: #ffffff;
+        }
+        .color-option.selected {
+            border-color: var(--prompt-color);
+            box-shadow: 0 0 5px var(--prompt-color);
         }
         
-        /* Ask Modal Styles */
-        #ask-modal {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-color: rgba(0, 0, 0, 0.9);
-            z-index: 60;
-            display: none; /* Controlled by JS */
-            align-items: center;
-            justify-content: center;
-            font-family: var(--font-mono);
+        /* Utility class to display truncated user ID on hover */
+        .user-id-display:hover .full-user-id {
+            display: block;
         }
-        .ask-modal-content {
-            width: 90%;
-            max-width: 600px;
-            background-color: #1a1a1a;
-            border: 2px solid var(--main-color);
-            border-radius: 8px;
-            padding: 20px;
-            box-shadow: 0 0 30px rgba(0, 255, 65, 0.7);
+        .full-user-id {
+            display: none;
+            position: absolute;
+            bottom: 100%; /* Position above the element */
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: #202020;
             color: var(--main-color);
+            padding: 0.5rem;
+            border-radius: 0.25rem;
+            z-index: 1000;
+            white-space: nowrap;
+        }
+
+        /* Navigation Links Styling */
+        .nav-link {
+            color: var(--main-color);
+            text-shadow: 0 0 5px rgba(255, 184, 97, 0.5);
+            transition: color 0.3s, text-shadow 0.3s;
+            padding: 0.5rem;
+            border-radius: 0.25rem;
+            font-weight: 700;
+        }
+        .nav-link:hover {
+            color: var(--prompt-color);
+            text-shadow: 0 0 10px var(--prompt-color);
+            background-color: rgba(255, 184, 97, 0.1);
         }
     </style>
 </head>
-<body class="bg-gray-900 scroll-smooth">
 
-    <!-- 1. The Public-Facing Landing Page (Main Scrollable Content) -->
-    <div id="landing-page" class="w-full min-h-screen flex flex-col items-center p-0 md:p-6 bg-gray-900">
+<!-- APPLYING AMBER THEME TO THE MAIN BODY -->
+<body class="bg-[#0d0101] text-[#ffb861] min-h-screen flex flex-col items-center p-4 font-mono">
+    
+    <!-- Top Navigation Bar -->
+    <header class="fixed top-0 right-0 p-4 z-40">
+        <nav class="space-x-4 text-sm font-bold">
+            <a href="#about" class="nav-link">ABOUT</a>
+            <a href="#services" class="nav-link">SERVICES</a>
+            <a href="#contact" class="nav-link">CONTACT</a>
+        </nav>
+    </header>
 
-        <!-- STICKY HEADER / NAVIGATION -->
-        <header class="w-full max-w-7xl sticky top-0 bg-gray-900/95 backdrop-blur-sm z-10 flex justify-between items-center py-4 px-6 border-b border-gray-700">
-            <!-- Redirect Button to Portfolio (Now pointing to the current page) -->
-            <a id="landing-portfolio-btn" href="#" class="px-5 py-2 text-md font-medium rounded-xl bg-red-600 text-white shadow-xl transition transform hover:scale-105 hover:bg-red-500 focus:outline-none focus:ring-4 focus:ring-red-700">
-                My Resume/Portfolio
-            </a>
-            <nav id="landing-nav" class="space-x-4 text-gray-400 text-sm hidden sm:flex">
-                <!-- Links now point to sections via HASH IDs -->
-                <a href="#about-section" class="hover:text-blue-400 transition">About</a>
-                <a href="#services-section" class="hover:text-blue-400 transition">Services</a>
-                <a href="#contact-section" class="hover:text-blue-400 transition">Contact</a>
-            </nav>
-        </header>
-
-        <!-- HERO SECTION (Main Console Access) -->
-        <div class="w-full flex items-center justify-center p-6 text-center" style="min-height: 80vh;">
-            <div class="max-w-xl p-8 bg-gray-800 rounded-xl shadow-2xl border border-gray-700">
-                <h1 class="text-5xl font-extrabold text-blue-400 mb-4">Project Phoenix Online</h1>
-                <p class="text-gray-300 text-lg mb-8" id="landing-message">
-                    The infrastructure is stable and secure. We are preparing for the public launch. Thank you for your patience.
-                </p>
-                
-                <!-- Terminal Launch Button -->
-                <button id="launch-btn" class="px-8 py-3 text-xl font-semibold rounded-full bg-yellow-500 text-gray-900 shadow-lg hover:bg-yellow-400 transition transform hover:scale-105">
-                    ACCESS SYSTEM CONSOLE (Authorized Personnel Only)
-                </button>
-            </div>
-        </div>
+    <!-- Main Landing Page Content -->
+    <div id="landing-page" class="text-center pt-24 pb-12 w-full flex flex-col items-center justify-center min-h-[50vh]">
+        <!-- Text updated to PROJECT PHOENIX -->
+        <h1 class="text-5xl md:text-7xl font-bold mb-8 drop-shadow-[0_0_15px_rgba(255,184,97,0.7)] tracking-wider">
+            PROJECT PHOENIX
+        </h1>
+        <p class="mb-10 text-xl text-gray-400">
+            Access Authorized. Initialization Protocol Engaged.
+        </p>
         
+        <button id="launch-btn" 
+                class="bg-[#ffb861] text-black font-bold py-3 px-8 rounded-lg uppercase 
+                       shadow-[0_0_10px_#ffb861] hover:bg-[#ff8c4a] transition duration-300 transform hover:scale-105">
+            LAUNCH TERMINAL
+        </button>
+    </div>
+
+    <!-- Additional Content Sections -->
+    <main class="w-full">
         <!-- ABOUT SECTION -->
-        <section id="about-section" class="w-full max-w-4xl p-12 my-20 bg-gray-800 rounded-xl shadow-2xl border-t-4 border-blue-500">
-            <h2 class="text-4xl font-bold text-blue-400 mb-6">About Project Phoenix</h2>
-            <p class="text-gray-300 text-lg mb-4">
-                Project Phoenix is a proof-of-concept digital environment designed to demonstrate robust full-stack development skills, focusing on interactive user interfaces, persistent data handling (via simulated backend/local storage), and dynamic real-time interaction. It simulates a command-line interface running on top of a modern, responsive web application.
-            </p>
-            <p class="text-gray-400 text-md">
-                This domain serves as a professional showcase, blending creative design (the hacker console) with functional utilities (the embedded commands). It represents a commitment to building engaging, high-performance web experiences.
-            </p>
+        <section id="about" class="py-20 md:py-32 w-full max-w-4xl px-4 mx-auto terminal-theme border-t-2 border-dashed border-[var(--info-color)]">
+            <h2 class="text-4xl font-bold mb-6 text-[var(--prompt-color)]">// PROJECT_OVERVIEW</h2>
+            <div class="text-lg space-y-4">
+                <p>Phoenix is a top-tier security and collaborative development system. It operates on a decentralized, real-time data sync network, ensuring that all authorized users have immediate access to the latest operational artifacts and communication logs.</p>
+                <p>The system is designed for high-stakes, low-latency collaboration, utilizing Google's secure Firebase infrastructure for user authentication and data persistence. Its core function is to facilitate secure, project-based operations that demand absolute discretion and reliability. All user activity, including global status updates, is tracked and synchronized in real-time across the platform.</p>
+                <p class="text-[var(--success-color)]">// SECURITY_LEVEL: OMEGA</p>
+            </div>
         </section>
 
         <!-- SERVICES SECTION -->
-        <section id="services-section" class="w-full max-w-4xl p-12 my-20 bg-gray-800 rounded-xl shadow-2xl border-t-4 border-yellow-500">
-            <h2 class="text-4xl font-bold text-yellow-500 mb-6">Core System Services</h2>
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-8 text-gray-300">
-                <div>
-                    <h3 class="text-xl font-semibold mb-2 text-yellow-300">Console Utilities</h3>
-                    <p class="text-sm">Access to functional commands like `calc`, `time`, and `joke` to show integration capabilities and API fetching.</p>
-                </div>
-                <div>
-                    <h3 class="text-xl font-semibold mb-2 text-yellow-300">Simulated Network</h3>
-                    <p class="text-sm">Interactive, simulated tools like `ping`, `status`, and `exploit` demonstrate dynamic output and system responsiveness.</p>
-                </div>
-                <div>
-                    <h3 class="text-xl font-semibold mb-2 text-yellow-300">Theming & Persistence</h3>
-                    <p class="text-sm">User can customize terminal colors via GUI or command line (`color [hex]`), with settings stored for the next visit.</p>
-                </div>
-            </div>
+        <section id="services" class="py-20 md:py-32 w-full max-w-4xl px-4 mx-auto terminal-theme bg-black/10 border-t-2 border-dashed border-[var(--info-color)]">
+            <h2 class="text-4xl font-bold mb-6 text-[var(--prompt-color)]">// ACTIVE_MODULES</h2>
+            <ul class="list-disc list-inside text-lg space-y-3 pl-5">
+                <li class="info-message">REAL-TIME DATA SYNC: Instantaneous data propagation using Firestore.</li>
+                <li class="success-message">COMMAND-LINE INTERFACE: Secure, customized terminal for rapid execution of tasks.</li>
+                <li class="prompt-color">AI QUERY PROTOCOL: High-level system AI for data synthesis and strategic planning (powered by Gemini).</li>
+                <li class="main-color">PERSISTENT STATE MANAGEMENT: User-specific configuration and authentication status.</li>
+                <li class="error-message">GLOBAL STATUS BROADCAST: Public, multi-user status communication channel.</li>
+            </ul>
         </section>
 
         <!-- CONTACT SECTION -->
-        <section id="contact-section" class="w-full max-w-4xl p-12 my-20 bg-gray-800 rounded-xl shadow-2xl border-t-4 border-red-500">
-            <h2 class="text-4xl font-bold text-red-500 mb-6">Secure Contact Protocol</h2>
-            <p class="text-gray-300 text-lg mb-6">
-                Direct communication is preferred through professional channels. Your designated email, <span class="text-yellow-400">devchrisstudios@gmail.com</span>, has been configured for direct secure communication.
-            </p>
-            <!-- Only Email Channel remains and is now full width -->
-            <div class="flex flex-col sm:flex-row space-y-4 sm:space-y-0 sm:space-x-4">
-                <a href="mailto:devchrisstudios@gmail.com" class="w-full text-center py-3 bg-red-700 text-white font-medium rounded-lg hover:bg-red-600 transition">Email Channel</a>
-                <!-- LinkedIn Tunnel removed as requested -->
+        <section id="contact" class="py-20 md:py-32 w-full max-w-4xl px-4 mx-auto terminal-theme border-t-2 border-dashed border-[var(--info-color)]">
+            <h2 class="text-4xl font-bold mb-6 text-[var(--prompt-color)]">// CONNECTIVITY</h2>
+            <div class="text-lg space-y-4">
+                <p>Communication is strictly restricted to authenticated channels. To submit a support or operational ticket, use the floating AI Query button, or execute the 'query' command within the terminal interface.</p>
+                <p>For urgent, priority-level communications, transmit directly to the system administrator using the following encrypted hash:</p>
+                <p class="text-xl font-bold text-[var(--error-color)]">HASH: 954A-FF01-C7D3-E6B8</p>
+                <p>Thank you for your cooperation in maintaining the integrity of Project Phoenix operations.</p>
             </div>
         </section>
+    </main>
 
-        <footer class="mt-16 text-sm text-gray-600 mb-8">
-            &copy; 2025 Domain Secure Inc. All rights reserved.
-        </footer>
-        
-        <!-- Floating ASK Button (New Feature) -->
-        <button id="ask-float-btn" class="fixed bottom-8 right-8 z-20 px-6 py-4 text-xl font-bold rounded-full bg-blue-600 text-white shadow-2xl transition transform hover:scale-110 hover:bg-blue-500 focus:outline-none focus:ring-4 focus:ring-blue-700">
-            ASK AI 🤖
-        </button>
+    <!-- Floating AI Button (Hackery Look) -->
+    <button id="ask-float-btn" 
+            class="fixed bottom-6 right-6 p-4 rounded-full bg-[#333] text-gray-200 shadow-[0_0_15px_#93d6e5]
+                   hover:bg-[#20b2aa] transition duration-300 z-50">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" viewBox="0 0 20 20" fill="currentColor">
+            <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd" />
+        </svg>
+    </button>
+    
+    <!-- Ask AI Modal (Hidden by Default) -->
+    <div id="ask-modal-wrapper" class="fixed inset-0 bg-black bg-opacity-75 hidden items-center justify-center z-[100]">
+        <div class="bg-[#0d0101] p-6 rounded-xl shadow-[0_0_20px_#ffb861] w-11/12 md:w-1/2 lg:w-1/3 border-2 border-[#ffb861]">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-xl font-bold text-[#93d6e5]">// AI_QUERY_PROTOCOL</h3>
+                <button id="ask-modal-close" class="text-[#ff6347] hover:text-white">&times;</button>
+            </div>
+            <textarea id="ask-modal-input" class="w-full h-24 p-3 bg-black text-[#00ff41] border border-[#ffb861] rounded-md focus:outline-none focus:ring-1 focus:ring-[#93d6e5]" placeholder="Enter your high-level system query..."></textarea>
+            <p id="modal-response" class="mt-4 text-sm text-[#ffb861] min-h-[20px] whitespace-pre-wrap"></p>
+            <button id="ask-modal-submit" class="mt-4 w-full bg-[#ffb861] text-black font-bold py-2 rounded-md hover:bg-[#ff8c4a] transition">
+                EXECUTE QUERY
+            </button>
+            <div id="modal-loading-indicator" class="mt-4 hidden text-center text-[#93d6e5]">
+                // PROCESSING... <span class="typing-effect"></span>
+            </div>
+        </div>
     </div>
 
-    <!-- 4. Ask Modal (Floating Popup) -->
-    <div id="ask-modal" class="hidden">
-        <div class="ask-modal-content">
-            <div class="flex justify-between items-center mb-4 border-b border-gray-700 pb-2">
-                <h4 class="text-xl font-bold text-yellow-500">Secure Knowledge Query (Gemini)</h4>
-                <button id="ask-modal-close" class="text-2xl text-red-500 hover:text-red-400">&times;</button>
+
+    <!-- Terminal Overlay (Hidden by Default) -->
+    <div id="terminal-wrapper" 
+         class="fixed inset-0 hidden flex-col items-center justify-center p-4 z-50 terminal-theme">
+        
+        <div id="terminal-container" class="terminal-container flex flex-col shadow-2xl">
+            
+            <!-- Terminal Header/Menu Bar -->
+            <div class="terminal-header p-2 text-sm">
+                <!-- Left Section: Status -->
+                <div class="flex space-x-4 items-center">
+                    <span id="user-display" class="font-bold relative user-id-display">
+                        // USER_ID: [PENDING] 
+                        <span class="full-user-id"></span>
+                    </span>
+                    <span id="system-status-display" class="text-[var(--info-color)]">
+                        // STATUS: OFFLINE
+                    </span>
+                </div>
+                <!-- Right Section: Control Buttons -->
+                <div class="flex space-x-2">
+                    <button id="reboot-btn" 
+                            class="text-sm px-2 py-0.5 rounded border border-transparent 
+                                   hover:border-[#ff6347] transition duration-150 text-[var(--error-color)]">
+                        // REBOOT
+                    </button>
+                    <button id="settings-toggle-btn" 
+                            class="text-sm px-2 py-0.5 rounded border border-transparent 
+                                   hover:border-[#93d6e5] transition duration-150">
+                        // SETTINGS
+                    </button>
+                    <button id="close-terminal-btn" 
+                            class="text-sm px-2 py-0.5 rounded border border-transparent 
+                                   hover:border-[#ff6347] transition duration-150 text-[var(--error-color)]">
+                        // CLOSE
+                    </button>
+                </div>
+            </div>
+
+            <!-- Terminal Output Area -->
+            <div id="terminal-output" class="flex-grow terminal-output p-2 overflow-y-auto">
+                <!-- Terminal messages will be injected here -->
+            </div>
+
+            <!-- Terminal Input Area -->
+            <div id="terminal-input" class="terminal-input border-t-2 border-dashed border-[var(--main-color)] p-2 flex-shrink-0">
+                <div class="terminal-input-line">
+                    <span class="prompt-char select-none font-bold">&gt;</span>
+                    <input type="text" id="command-input" class="bg-transparent w-full focus:outline-none text-[var(--main-color)]" autofocus>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Settings Sidebar (Hidden by Default) -->
+        <div id="settings-sidebar" class="settings-sidebar fixed right-0 top-0 h-full w-64 p-4 transform translate-x-full transition-transform duration-300 z-50">
+            <div class="flex justify-between items-center mb-6">
+                <h4 class="text-lg font-bold">CONFIG</h4>
+                <button id="close-settings-btn" class="text-[#ff6347] hover:text-white">&times;</button>
+            </div>
+
+            <h5 class="font-semibold mb-2 text-[#93d6e5]">Theme Color:</h5>
+            <div id="color-options" class="flex space-x-3">
+                <!-- Color options will be generated here -->
             </div>
             
-            <p class="text-sm mb-4" style="color: var(--info-color);">Enter your query below. Responses are grounded by Google Search.</p>
-
-            <input type="text" id="ask-modal-input" placeholder="Type your question here..." class="w-full p-3 mb-4 bg-gray-900 border border-gray-700 rounded-md text-white font-mono placeholder-gray-500 outline-none focus:border-blue-500">
-            
-            <button id="ask-modal-submit" class="w-full py-3 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-500 transition">
-                Submit Query
+            <button id="save-settings-btn" 
+                    class="mt-6 w-full bg-[#ffb861] text-black font-bold py-2 rounded-md hover:bg-[#ff8c4a] transition">
+                SAVE & APPLY
             </button>
 
-            <div id="ask-modal-output" class="mt-6 pt-4 border-t border-gray-800 text-sm overflow-y-auto max-h-60">
-                <!-- AI response and sources will appear here -->
-            </div>
+            <p class="mt-8 text-xs opacity-70">
+                Current Settings are stored locally.
+            </p>
         </div>
     </div>
 
-    <!-- 2. The Interactive Hacker Terminal (Hidden by default) -->
-    <div id="terminal-wrapper" class="hidden absolute top-0 left-0 w-full h-full flex items-center justify-center terminal-theme">
-        <div class="terminal-container">
-            <div id="output-area"></div>
-            <div id="input-line">
-                <span id="prompt">C:\\GHOST_SHELL></span>
-                <input type="text" id="command-input" disabled>
-                <button id="settings-toggle" class="ml-2 px-3 py-1 bg-gray-800 text-yellow-500 border border-yellow-500 rounded-md hover:bg-gray-700 transition" title="Toggle Settings">
-                    ⚙️
-                </button>
-            </div>
-        </div>
-    </div>
-    
-    <!-- 3. Sidebar for Settings (Appearance & Utilities) -->
-    <div id="settings-sidebar">
-        <h3 class="text-2xl font-bold mb-4 border-b border-yellow-500 pb-2 text-yellow-500">SYSTEM SETTINGS</h3>
-        
-        <div class="mb-6">
-            <h4 class="text-lg font-semibold mb-2" style="color: var(--info-color);">Terminal Appearance</h4>
-            <div class="space-y-2">
-                <button onclick="applyTerminalColors('#00ff41', 'Green Matrix')" class="w-full px-4 py-2 text-sm" style="background-color: #004d00; color: #00ff41; border: 1px solid #00ff41;">Theme: Green Matrix</button>
-                <button onclick="applyTerminalColors('#00ffff', 'Blue ICE')" class="w-full px-4 py-2 text-sm" style="background-color: #003333; color: #00ffff; border: 1px solid #00ffff;">Theme: Blue ICE</button>
-                <button onclick="applyTerminalColors('#ff6347', 'Red Alert')" class="w-full px-4 py-2 text-sm" style="background-color: #4d1e16; color: #ff6347; border: 1px solid #ff6347;">Theme: Red Alert</button>
-                <p class="text-xs pt-2" style="color: var(--info-color);">Use `color [hexcode]` in console for custom theme.</p>
-            </div>
-        </div>
+    <!-- JavaScript Logic -->
+    <script type="module">
+        // --- Firebase Imports ---
+        import { initializeApp, setLogLevel } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, doc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-        <div class="mb-6">
-            <h4 class="text-lg font-semibold mb-2" style="color: var(--info-color);">System Utilities</h4>
-            <!-- Portfolio Redirect in Terminal - Now pointing to the current page -->
-            <a href="#" class="block w-full px-4 py-2 text-sm text-center bg-red-600 text-white rounded hover:bg-red-500 transition">
-                Launch Portfolio Subdomain
-            </a>
-        </div>
+        // Gemini API configuration
+        const apiKey = ""; 
+        const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`;
 
-        <button id="close-settings-btn" class="absolute top-3 right-3 text-xl text-red-500 hover:text-red-400">
-            &times;
-        </button>
-    </div>
+        // Global variables provided by the Canvas environment
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+        const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {};
+        const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
 
-    <script>
-        const landingPage = document.getElementById('landing-page');
+        // Firebase state variables
+        let db;
+        let auth;
+        let userId = null;
+        let isAuthReady = false;
+
+        // --- DOM Elements ---
         const terminalWrapper = document.getElementById('terminal-wrapper');
+        const terminalOutput = document.getElementById('terminal-output');
+        const commandInput = document.getElementById('command-input');
         const launchBtn = document.getElementById('launch-btn');
+        const settingsToggleBtn = document.getElementById('settings-toggle-btn');
         const settingsSidebar = document.getElementById('settings-sidebar');
-        const settingsToggleBtn = document.getElementById('settings-toggle');
         const closeSettingsBtn = document.getElementById('close-settings-btn');
+        const colorOptionsContainer = document.getElementById('color-options');
+        const saveSettingsBtn = document.getElementById('save-settings-btn');
+        const landingPage = document.getElementById('landing-page');
+        const terminalContainer = document.getElementById('terminal-container');
+        const userDisplay = document.getElementById('user-display');
+        const systemStatusDisplay = document.getElementById('system-status-display');
         
-        // New global variables for Ask Modal
+        // Terminal control buttons
+        const rebootBtn = document.getElementById('reboot-btn');
+        const closeTerminalBtn = document.getElementById('close-terminal-btn');
+
+        // Modal elements
         const askFloatBtn = document.getElementById('ask-float-btn');
-        const askModal = document.getElementById('ask-modal');
+        const askModalWrapper = document.getElementById('ask-modal-wrapper');
         const askModalClose = document.getElementById('ask-modal-close');
         const askModalInput = document.getElementById('ask-modal-input');
         const askModalSubmit = document.getElementById('ask-modal-submit');
-        const askModalOutput = document.getElementById('ask-modal-output');
+        const modalResponse = document.getElementById('modal-response');
+        const modalLoadingIndicator = document.getElementById('modal-loading-indicator');
 
-        const outputArea = document.getElementById('output-area');
-        const inputField = document.getElementById('command-input');
-        const promptSpan = document.getElementById('prompt');
-        const root = document.documentElement;
-        
-        // History and Persistence Variables
+        // --- State and Config ---
         let commandHistory = [];
-        let historyIndex = -1; 
-        const defaultTypingDelay = 30;
-
-        // Sequence of messages displayed on terminal startup
-        const simulatedBootSequence = [
-            "<span class='info'>[BOOT]</span> Initializing GHOST_SHELL v3.2.0...",
-            "<span class='success'>[AUTH]</span> Credentials validated. Access Level: ROOT.",
-            "<span class='info'>[NET]</span> Establishing Secure Tunnel (VPN: AURORA).",
-            "<span class='success'>[SYSTEM]</span> Environment configured. Memory Allocation: 99%.",
-            "Welcome, user. Type <span class='success'>'help'</span> for a list of available commands.",
-            "\n"
-        ];
+        let historyIndex = -1;
+        let isProcessing = false;
+        let selectedColor = 'amber'; // Default to the new amber theme
         
-        // --- Core Utility Functions ---
-
-        function printLine(text, className = '') {
-            const line = document.createElement('div');
-            line.className = className;
-            line.innerHTML = text;
-            outputArea.appendChild(line);
-        }
-
-        function scrollToBottom() {
-            outputArea.scrollTop = outputArea.scrollHeight;
-        }
-
-        function simulateTyping(message, delay = defaultTypingDelay) {
-            return new Promise(resolve => {
-                // For quick boot, print instantly
-                if (delay === 0) {
-                    printLine(message);
-                    resolve();
-                    return;
-                }
-
-                let i = 0;
-                let buffer = '';
-                const line = document.createElement('div');
-                line.className = 'line';
-                outputArea.appendChild(line);
-                scrollToBottom();
-
-                const typingInterval = setInterval(() => {
-                    if (i < message.length) {
-                        buffer += message.charAt(i);
-                        line.innerHTML = buffer + (i < message.length - 1 ? "<span class='blink'>|</span>" : "");
-                        i++;
-                        scrollToBottom();
-                    } else {
-                        clearInterval(typingInterval);
-                        line.innerHTML = buffer;
-                        resolve();
-                    }
-                }, delay);
-            });
-        }
-        
-        /**
-         * Applies a new color theme based on a hex code and saves it to localStorage.
-         */
-        function applyTerminalColors(mainColorHex, name = 'Custom') {
-            const container = document.querySelector('.terminal-container');
-            const color = mainColorHex.toLowerCase();
-            
-            // Set CSS variables
-            root.style.setProperty('--main-color', color);
-
-            // Save color to local storage for persistence
-            localStorage.setItem('terminalColor', color);
-
-            // Determine subtle shadow color for dynamic styling
-            let r = parseInt(color.substring(1, 3), 16);
-            let g = parseInt(color.substring(3, 5), 16);
-            let b = parseInt(color.substring(5, 7), 16);
-            
-            // Recalculate shadow based on the new color components
-            container.style.boxShadow = `0 0 20px rgba(${r}, ${g}, ${b}, 0.7), inset 0 0 10px rgba(${r}, ${g}, ${b}, 0.3)`;
-
-            if (name !== 'boot') {
-                printLine(`<span class='info'>[THEME]</span> Theme changed to ${name} (${mainColorHex}).`, 'info');
+        // Define color themes
+        const colorOptions = {
+            amber: {
+                main: '#ffb861',
+                info: '#f7a049',
+                success: '#00ff41',
+                error: '#ff6347',
+                prompt: '#93d6e5',
+                name: 'Amber Glow'
+            },
+            green: {
+                main: '#00ff41',
+                info: '#87ceeb',
+                success: '#32cd32',
+                error: '#ff6347',
+                prompt: '#ffc107',
+                name: 'Classic Green'
+            },
+            cyan: {
+                main: '#47e5ff',
+                info: '#20b2aa',
+                success: '#00ff41',
+                error: '#ff6347',
+                prompt: '#ffb861',
+                name: 'Electric Cyan'
             }
-        }
-
-        // --- Gemini API Utilities ---
-        const apiKey = ""; // Leave as-is for runtime injection
-        const geminiApiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`;
-
-        async function callGeminiApi(payload) {
-            const maxRetries = 5;
-            let delay = 1000; // 1 second
-
-            for (let i = 0; i < maxRetries; i++) {
-                try {
-                    const response = await fetch(geminiApiUrl, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify(payload)
-                    });
-
-                    if (response.ok) {
-                        return response.json();
-                    } else if (response.status === 429) {
-                        // Rate limit exceeded, retry with backoff
-                        await new Promise(resolve => setTimeout(resolve, delay));
-                        delay *= 2; // Exponential backoff
-                    } else {
-                        // Other error, throw
-                        throw new Error(`API returned status ${response.status}: ${response.statusText}`);
-                    }
-                } catch (error) {
-                    if (i === maxRetries - 1) {
-                        throw error; // Throw if max retries reached
-                    }
-                    // Log and wait for next retry (silent backoff in console)
-                    await new Promise(resolve => setTimeout(resolve, delay));
-                    delay *= 2;
-                }
-            }
-        }
-
-
-        // --- Command Handlers ---
-
-        const commandHandlers = {
-            'help': handleHelp,
-            'clear': handleClear,
-            'status': handleStatus,
-            'ping': handlePing,
-            'exploit': handleExploit,
-            'settings': toggleSettingsSidebar,
-            'exit': handleExit, 
-            'calc': handleCalc,
-            'joke': handleJoke, 
-            'time': handleTime,
-            'color': handleColor,
-            'ask': handleAsk 
         };
 
-        async function handleHelp() {
-            printLine("Available System Commands:", 'info');
-            printLine(`
-    <span class='success'>help</span>           - Displays this list of commands.
-    <span class='success'>clear</span>          - Clears the terminal screen.
-    <span class='success'>exit</span>           - Returns to the landing page.
-    <span class='success'>settings</span>       - Opens the graphical settings panel.
-    --- FUNCTIONAL UTILITIES ---
-    <span class='success'>time</span>           - Displays the current system time and date.
-    <span class='success'>calc [expr]</span>    - Evaluates a mathematical expression (e.g., calc 5 * (10 + 2)).
-    <span class='success'>joke</span>           - Fetches a random programming joke.
-    <span class='success'>color [hex]</span>    - Changes the terminal text/border color (e.g., color #ff00ff).
-    --- LLM-POWERED UTILITIES ---
-    <span class='success'>ask [query]</span>    - ✨ Queries the Gemini AI for real-time answers (e.g., ask what is the latest news on AI).
-    --- SIMULATED TOOLS ---
-    <span class='success'>status</span>         - Checks the current system metrics.
-    <span class='success'>ping [ip]</span>      - Pings a simulated network address.
-    <span class='success'>exploit [target]</span> - Initiates a complex hacking simulation.
-            `);
-        }
-        
-        function handleExit() {
-            terminalWrapper.classList.add('hidden');
-            landingPage.classList.remove('hidden');
-            landingPage.classList.add('flex');
-            outputArea.innerHTML = '';
-            inputField.removeEventListener('keydown', handleInput);
-            printLine("<span class='info'>[EXIT]</span> Session terminated. Returning to public domain.", 'info');
-        }
+        // --- Firebase Initialization and Auth ---
 
-        function handleClear() {
-            outputArea.innerHTML = '';
-        }
-
-        async function handleCalc(args) {
-            const expression = args.slice(1).join('');
-            if (!expression) {
-                printLine("<span class='error'>[SYNTAX ERROR]</span> Usage: calc [expression]", 'error');
-                return;
-            }
+        async function initFirebase() {
             try {
-                // Use a safe wrapper for eval
-                // eslint-disable-next-line no-unused-vars
-                const safeEval = (code) => new Function('return ' + code)();
-                const result = safeEval(expression);
-                await simulateTyping(`Result of ${expression}: <span class='success'>${result}</span>`, 10);
-            } catch (e) {
-                printLine(`<span class='error'>[CALC ERROR]</span> Invalid expression or calculation error: ${e.message}`, 'error');
-            }
-        }
+                // setLogLevel('Debug'); // Enable for debugging
+                const app = initializeApp(firebaseConfig);
+                db = getFirestore(app);
+                auth = getAuth(app);
 
-        async function handleJoke() {
-            await simulateTyping("<span class='info'>[FETCHING]</span> Querying humor database...", 30);
-            
-            const jokeUrl = 'https://v2.jokeapi.dev/joke/Programming?blacklistFlags=nsfw,religious,political,racist,sexist,explicit&type=single';
-            
-            try {
-                const response = await fetch(jokeUrl);
-                const data = await response.json();
+                await new Promise((resolve) => {
+                    onAuthStateChanged(auth, async (user) => {
+                        if (user) {
+                            userId = user.uid;
+                        } else {
+                            // If no user, sign in anonymously if no custom token is provided
+                            if (!initialAuthToken) {
+                                const anonUser = await signInAnonymously(auth);
+                                userId = anonUser.user.uid;
+                            }
+                        }
+                        
+                        // Use custom token if provided, this handles the main sign-in
+                        if (initialAuthToken && !user) {
+                            const customUser = await signInWithCustomToken(auth, initialAuthToken);
+                            userId = customUser.user.uid;
+                        }
 
-                if (data.error) {
-                    throw new Error(data.message || "Failed to retrieve joke.");
+                        if (!userId) {
+                             // Fallback in case of authentication failure
+                             userId = crypto.randomUUID();
+                        }
+
+                        isAuthReady = true;
+                        resolve();
+                    });
+                });
+                
+                // Update the UI with the final user ID
+                updateUserDisplay(userId);
+                
+                // Start listening for public data once authenticated
+                if (isAuthReady) {
+                    listenForStatusUpdates();
                 }
 
-                await simulateTyping(data.joke, 20);
-                printLine("", 'success');
-
-            } catch (e) {
-                printLine(`<span class='error'>[NET ERROR]</span> Could not connect to Joke API: ${e.message}`, 'error');
+            } catch (error) {
+                console.error("Firebase initialization or authentication failed:", error);
+                printTerminalMessage(`// ERROR: FIREBASE INIT FAILED - ${error.message}`, 'error');
+                isAuthReady = true; // Still allow app to function locally
             }
-        }
-
-        async function handleTime() {
-            const now = new Date();
-            const timeString = now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true });
-            const dateString = now.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
-            
-            await simulateTyping(`
-    [DATE] Current Date: <span class='info'>${dateString}</span>
-    [TIME] Current Time: <span class='success'>${timeString} UTC ${now.getTimezoneOffset() / -60}</span>
-            `, 10);
         }
         
-        async function handleColor(args) {
-            const hex = args[1];
-            if (!hex || !/^#([0-9A-F]{3}){1,2}$/i.test(hex)) {
-                printLine("<span class='error'>[SYNTAX ERROR]</span> Usage: color #[hexcode] (e.g., color #FF00FF)", 'error');
-                return;
-            }
-            applyTerminalColors(hex);
+        /**
+         * Updates the UI to show the current user ID.
+         * @param {string} id The user's full ID.
+         */
+        function updateUserDisplay(id) {
+            const shortId = id.substring(0, 8) + '...';
+            userDisplay.innerHTML = `
+                // USER_ID: ${shortId}
+                <span class="full-user-id">// FULL ID: ${id}</span>
+            `;
+            // Re-select the full ID element to apply the class
+            document.querySelector('.full-user-id').textContent = `// FULL ID: ${id}`;
         }
 
-        async function handleAsk(args) {
-            const userQuery = args.slice(1).join(' ');
-            if (!userQuery) {
-                printLine("<span class='error'>[SYNTAX ERROR]</span> Usage: ask [query/question]", 'error');
+        // --- Firestore Real-Time Functionality ---
+
+        /**
+         * The document reference for the public status message.
+         * We store the public status in a dedicated document that everyone can read.
+         */
+        function getStatusDocRef() {
+            // Path: /artifacts/{appId}/public/data/status_data/global_status
+            return doc(db, 'artifacts', appId, 'public', 'data', 'status_data', 'global_status');
+        }
+
+        /**
+         * Updates the public status message in Firestore.
+         * @param {string} message The status message to set.
+         */
+        async function updateStatus(message) {
+            if (!isAuthReady || !db) {
+                printTerminalMessage('// ERROR: FIREBASE NOT READY. Try launching again.', 'error');
                 return;
             }
-
-            await simulateTyping("<span class='info'>[PROCESSING]</span> Querying secure Gemini LLM backbone (Grounding: Active)...", 30);
-            
-            const payload = {
-                contents: [{ parts: [{ text: userQuery }] }],
-                tools: [{ "google_search": {} }],
-                systemInstruction: {
-                    parts: [{ text: "You are a highly concise, helpful, and technically-oriented AI assistant for a secure terminal interface. Answer the user's query directly and briefly." }]
-                },
-            };
 
             try {
-                const result = await callGeminiApi(payload);
-                const candidate = result.candidates?.[0];
-
-                if (candidate && candidate.content?.parts?.[0]?.text) {
-                    const llmResponse = candidate.content.parts[0].text;
-                    
-                    // Display the main response
-                    printLine("");
-                    await simulateTyping(`<span class='info'>[RESPONSE]</span> ${llmResponse}`, 20);
-
-                    // Handle grounding sources
-                    let sources = [];
-                    const groundingMetadata = candidate.groundingMetadata;
-                    if (groundingMetadata && groundingMetadata.groundingAttributions) {
-                        sources = groundingMetadata.groundingAttributions
-                            .map(attribution => ({
-                                uri: attribution.web?.uri,
-                                title: attribution.web?.title,
-                            }))
-                            .filter(source => source.uri && source.title); 
-                    }
-
-                    if (sources.length > 0) {
-                        printLine("\n<span class='success'>[GROUNDING]</span> Sources for verification:");
-                        sources.forEach((source, index) => {
-                            // Use a simple span/text for the link in the terminal style
-                            printLine(`    [${index + 1}] <a href="${source.uri}" target="_blank" class="info underline hover:no-underline">${source.title}</a>`);
-                        });
-                    }
-                } else {
-                    printLine("<span class='error'>[AI ERROR]</span> Failed to generate a valid response from the LLM.", 'error');
-                }
-
-            } catch (e) {
-                printLine(`<span class='error'>[API FAILURE]</span> Critical error accessing Gemini: ${e.message}`, 'error');
-                console.error(e);
-            }
-            printLine(""); // Newline for prompt alignment
-        }
-
-        // --- Simulated Command Handlers (Retained) ---
-
-        async function handleStatus() {
-            await simulateTyping("<span class='info'>[QUERYING]</span> Requesting system health report...", 30);
-            await simulateTyping(`
-    - CPU Load: 1.5% (Nominal)
-    - Memory Usage: 98% (MAX)
-    - Network Latency: 0.005ms
-    - Active Tunnels: 4
-    - ID: WRAITH-997-ALPHA
-            `, 15);
-            printLine("<span class='success'>[REPORT]</span> System operational.", 'success');
-        }
-
-        async function handlePing(args) {
-            const target = args[1] || '127.0.0.1';
-            await simulateTyping(`Pinging ${target} with 32 bytes of data:`, 20);
-
-            for (let i = 0; i < 4; i++) {
-                const time = (Math.random() * 50).toFixed(2);
-                await simulateTyping(`Reply from ${target}: bytes=32 time=${time}ms TTL=64`, 10);
-            }
-            printLine(`\nPing statistics for ${target}: Packets: Sent = 4, Received = 4, Lost = 0 (0% loss)`, 'success');
-        }
-
-        async function handleExploit(args) {
-            const target = args[1] || 'target_system_01';
-            if (!args[1]) {
-                printLine("<span class='error'>[SYNTAX ERROR]</span> Usage: exploit [target]", 'error');
-                return;
-            }
-
-            await simulateTyping(`<span class='info'>[ATTEMPT]</span> Initiating multi-stage exploit against ${target}...`, defaultTypingDelay);
-            await simulateTyping("Stage 1: Enumerating vulnerabilities...", 50);
-
-            for (let i = 0; i < 5; i++) {
-                const progress = (i + 1) * 20;
-                await simulateTyping(`[${'#'.repeat(i + 1)}${'-'.repeat(5 - (i + 1))}] ${progress}%`, 10);
-            }
-
-            if (target.toLowerCase() === 'firewall' || target.toLowerCase() === 'mainframe') {
-                await simulateTyping("<span class='success'>[SUCCESS]</span> Shell established. Persistence achieved.", 20);
-                await simulateTyping(`Target system ${target} compromised. Access Granted.`, 'success');
-            } else {
-                await simulateTyping("<span class='error'>[FAILURE]</span> Target system patched. Exploit failed.", 20);
-                await simulateTyping(`Target ${target} denied access. All traces wiped.`, 'error');
-            }
-        }
-        
-        // --- Sidebar Functions ---
-        
-        function toggleSettingsSidebar() {
-            settingsSidebar.classList.toggle('open');
-            if (settingsSidebar.classList.contains('open')) {
-                printLine("<span class='info'>[SYSTEM]</span> Graphical Settings panel launched. Close with 'settings' command or ❌ button.", 'info');
-            } else {
-                printLine("<span class='info'>[SYSTEM]</span> Graphical Settings panel closed.", 'info');
-            }
-        }
-
-        // Make theme function globally accessible from HTML onclick
-        window.applyTerminalColors = (color, name) => applyTerminalColors(color, name);
-
-        // --- New Modal Ask Handlers ---
-
-        function showAskModal() {
-            askModal.style.display = 'flex';
-            // Clear previous content
-            askModalInput.value = '';
-            askModalOutput.innerHTML = '';
-            askModalSubmit.textContent = 'Submit Query';
-            askModalInput.focus();
-        }
-
-        function closeAskModal() {
-            askModal.style.display = 'none';
-        }
-
-        function printModalLine(text, className = '') {
-            const line = document.createElement('div');
-            line.className = className;
-            line.innerHTML = text;
-            askModalOutput.appendChild(line);
-            askModalOutput.scrollTop = askModalOutput.scrollHeight;
-        }
-
-        // Reusing the core Gemini API logic, but targeting modal output
-        async function handleModalAsk() {
-            const userQuery = askModalInput.value.trim();
-            if (!userQuery) {
-                printModalLine("<span class='error'>[SYNTAX ERROR]</span> Please enter a question.", 'error');
-                return;
-            }
-
-            askModalOutput.innerHTML = ''; // Clear previous output
-            askModalInput.disabled = true;
-            askModalSubmit.disabled = true;
-            askModalSubmit.textContent = 'Processing...';
-
-            printModalLine("<span class='info'>[PROCESSING]</span> Querying secure Gemini LLM backbone (Grounding: Active)...", 'info');
-            
-            const payload = {
-                contents: [{ parts: [{ text: userQuery }] }],
-                tools: [{ "google_search": {} }],
-                systemInstruction: {
-                    parts: [{ text: "You are a highly concise, helpful, and technically-oriented AI assistant. Answer the user's query directly and briefly." }]
-                },
-            };
-
-            try {
-                const result = await callGeminiApi(payload);
-                const candidate = result.candidates?.[0];
-
-                if (candidate && candidate.content?.parts?.[0]?.text) {
-                    const llmResponse = candidate.content.parts[0].text;
-                    
-                    printModalLine("<hr class='border-gray-800 my-2'>");
-                    printModalLine(`<span class='info'>[RESPONSE]</span> ${llmResponse}`);
-
-                    let sources = [];
-                    const groundingMetadata = candidate.groundingMetadata;
-                    if (groundingMetadata && groundingMetadata.groundingAttributions) {
-                        sources = groundingMetadata.groundingAttributions
-                            .map(attribution => ({
-                                uri: attribution.web?.uri,
-                                title: attribution.web?.title,
-                            }))
-                            .filter(source => source.uri && source.title); 
-                    }
-
-                    if (sources.length > 0) {
-                        printModalLine("\n<span class='success'>[GROUNDING]</span> Sources for verification:");
-                        sources.forEach((source, index) => {
-                            printModalLine(`    [${index + 1}] <a href="${source.uri}" target="_blank" class="text-blue-400 hover:underline">${source.title}</a>`);
-                        });
-                    }
-                } else {
-                    printModalLine("<span class='error'>[AI ERROR]</span> Failed to generate a valid response from the LLM.", 'error');
-                }
-
-            } catch (e) {
-                printModalLine(`<span class='error'>[API FAILURE]</span> Critical error accessing Gemini: ${e.message}`, 'error');
-                console.error(e);
-            } finally {
-                askModalInput.disabled = false;
-                askModalSubmit.disabled = false;
-                askModalSubmit.textContent = 'Submit Query';
-                askModalOutput.scrollTop = askModalOutput.scrollHeight;
-            }
-        }
-
-
-        // --- Main Logic & Event Handling ---
-
-        function executeCommand(command) {
-            const parts = command.trim().toLowerCase().split(/\s+/);
-            const cmd = parts[0];
-            const args = parts;
-
-            // Disable input field while command is executing
-            inputField.disabled = true;
-
-            const handler = commandHandlers[cmd];
-            const result = handler ? handler(args) : null;
-
-            Promise.resolve(result).finally(() => {
-                inputField.disabled = false;
-                inputField.focus();
-                scrollToBottom();
-            });
-
-
-            if (!handler && cmd) {
-                printLine(`<span class='error'>[ERROR]</span> Command not found: ${cmd}. Type 'help' for options.`, 'error');
-                inputField.disabled = false;
-                inputField.focus();
-                scrollToBottom();
+                await setDoc(getStatusDocRef(), {
+                    message: message,
+                    timestamp: new Date().getTime(),
+                    userId: userId 
+                });
+                printTerminalMessage(`// STATUS_UPDATE_SUCCESS: Status set to "${message}"`, 'success');
+            } catch (error) {
+                printTerminalMessage(`// ERROR: Failed to save status - ${error.message}`, 'error');
+                console.error("Firestore Error:", error);
             }
         }
 
         /**
-         * Handles user input, including Enter (execution), Arrow Keys (history), and Tab (completion).
+         * Sets up the real-time listener for the public status message.
          */
-        function handleInput(event) {
-            if (event.key === 'Enter') {
-                const command = inputField.value.trim();
-                
-                printLine(`${promptSpan.textContent} <span class='user-input'>${command}</span>`);
+        function listenForStatusUpdates() {
+            if (!isAuthReady || !db) return;
 
-                // Only execute if command is not empty
-                if (command) {
-                    executeCommand(command);
-                    // Save command to history and reset index
-                    if (commandHistory[0] !== command) {
-                        commandHistory.unshift(command);
+            onSnapshot(getStatusDocRef(), (docSnapshot) => {
+                if (docSnapshot.exists()) {
+                    const data = docSnapshot.data();
+                    const statusMessage = data.message || 'IDLE';
+                    const timestamp = new Date(data.timestamp).toLocaleTimeString();
+                    const sourceId = data.userId ? data.userId.substring(0, 8) + '...' : 'SYSTEM';
+
+                    // Update the header display
+                    systemStatusDisplay.textContent = `// STATUS: ${statusMessage}`;
+                    
+                    // Announce the status change in the terminal output
+                    if (terminalWrapper.classList.contains('flex')) {
+                        printTerminalMessage(`[${timestamp}][${sourceId}] > GLOBAL STATUS: "${statusMessage}"`, 'info');
                     }
+                } else {
+                    systemStatusDisplay.textContent = '// STATUS: IDLE';
+                    // Initialize the status document if it doesn't exist
+                    updateStatus('Operational');
                 }
+            }, (error) => {
+                printTerminalMessage(`// ERROR: Real-time status sync failed - ${error.message}`, 'error');
+                console.error("Firestore Listen Error:", error);
+            });
+        }
 
-                inputField.value = '';
-                historyIndex = -1; // Reset history index
-                scrollToBottom();
+
+        // --- Utility Functions ---
+
+        /**
+         * Converts plain text into HTML for terminal output, handling newlines.
+         * @param {string} text 
+         * @returns {string} HTML content
+         */
+        function formatOutput(text) {
+            return text.replace(/\n/g, '<br>');
+        }
+
+        /**
+         * Prints a message to the terminal output.
+         * @param {string} message The text content.
+         * @param {string} type 'info', 'success', 'error', 'system' (default).
+         */
+        function printTerminalMessage(message, type = 'system') {
+            const messageElement = document.createElement('div');
+            let className = '';
+
+            switch (type) {
+                case 'info': className = 'info-message'; break;
+                case 'success': className = 'success-message'; break;
+                case 'error': className = 'error-message'; break;
+                default: className = 'text-[var(--main-color)]'; break;
+            }
+
+            messageElement.className = className;
+            messageElement.innerHTML = formatOutput(message);
+            terminalOutput.appendChild(messageElement);
+            terminalOutput.scrollTop = terminalOutput.scrollHeight;
+        }
+        
+        /**
+         * Renders the user's command line to the output.
+         * @param {string} command The command entered by the user.
+         */
+        function printCommand(command) {
+            const commandElement = document.createElement('div');
+            commandElement.className = 'terminal-input-line';
+            commandElement.innerHTML = `<span class="prompt-char select-none font-bold">&gt;</span><span>${formatOutput(command)}</span>`;
+            terminalOutput.appendChild(commandElement);
+        }
+
+        /**
+         * Runs the asynchronous boot sequence when the terminal launches.
+         */
+        async function runBootSequence() {
+            // Re-initialize Firebase connection if necessary, but typically this is only needed once.
+            if (!isAuthReady) {
+                await initFirebase();
+            }
+
+            const bootMessages = [
+                '// INITIALIZING CORE SYSTEM...',
+                '// AUTHENTICATING USER ID: ' + userId.substring(0, 8) + '...',
+                '// DECRYPTING USER DATA...',
+                '// ESTABLISHING REAL-TIME FIREBASE CONNECTION...',
+                '// CONNECTION_PROTOCOL ESTABLISHED.',
+                '// WELCOME. TYPE "help" FOR AVAILABLE COMMANDS.'
+            ];
+
+            // Clear output and print initial system message
+            terminalOutput.innerHTML = '';
+            printTerminalMessage('[[ SYSTEM BOOT SEQUENCE INITIATED ]]', 'info');
+            
+            for (const msg of bootMessages) {
+                await new Promise(resolve => setTimeout(resolve, 300 + Math.random() * 500));
+                printTerminalMessage(msg);
+            }
+
+            // After boot sequence, clear any existing input and focus
+            commandInput.value = '';
+            commandInput.focus();
+        }
+
+
+        // --- Command Handling ---
+
+        /**
+         * Processes the command entered by the user.
+         * @param {string} command The raw command string.
+         */
+        function processCommand(command) {
+            if (isProcessing) {
+                printTerminalMessage('// ERROR: Command processing already in progress.', 'error');
                 return;
             }
 
-            // History Navigation (Arrow Up/Down)
-            if (event.key === 'ArrowUp' || event.key === 'ArrowDown') {
-                event.preventDefault(); // Stop cursor movement
-                
-                if (commandHistory.length === 0) return;
-
-                if (event.key === 'ArrowUp') {
-                    historyIndex = Math.min(commandHistory.length - 1, historyIndex + 1);
-                } else if (event.key === 'ArrowDown') {
-                    historyIndex = Math.max(-1, historyIndex - 1);
-                }
-
-                if (historyIndex === -1) {
-                    inputField.value = '';
-                } else {
-                    inputField.value = commandHistory[historyIndex];
-                }
+            // Add to history only if not empty and not a repeat
+            if (command && command !== commandHistory[0]) {
+                commandHistory.unshift(command);
             }
+            historyIndex = -1; // Reset history index
 
-            // Tab Completion
-            if (event.key === 'Tab') {
-                event.preventDefault(); // Stop default tab behavior
-                const input = inputField.value.trim().toLowerCase();
-                const commands = Object.keys(commandHandlers);
-
-                const match = commands.find(cmd => cmd.startsWith(input));
-
-                if (match) {
-                    inputField.value = match;
-                }
-            }
-        }
-
-        async function runBootSequence() {
-            if (outputArea.children.length > 0) return;
-
-            inputField.disabled = true;
-
-            // Faster delays for boot
-            const bootTypingDelay = 0; 
-            const bootLineDelay = 10; 
-
-            for (const line of simulatedBootSequence) {
-                await simulateTyping(line, bootTypingDelay); 
-                await new Promise(resolve => setTimeout(resolve, bootLineDelay));
-            }
-
-            inputField.disabled = false;
-            inputField.focus();
-            inputField.addEventListener('keydown', handleInput);
-            scrollToBottom();
-        }
-
-        function showTerminal() {
-            // Hide the landing page content wrapper
-            landingPage.classList.add('hidden'); 
+            printCommand(command);
+            commandInput.value = '';
             
+            const parts = command.trim().split(/\s+/);
+            const cmd = parts[0] ? parts[0].toLowerCase() : '';
+            const args = parts.slice(1).join(' ');
+
+            if (!command.trim()) {
+                // Do nothing for empty command
+            } else if (cmd === 'help') {
+                showHelp();
+            } else if (cmd === 'clear') {
+                terminalOutput.innerHTML = '';
+            } else if (cmd === 'settings') {
+                toggleSettingsSidebar();
+                printTerminalMessage('// CONFIGURATION PANEL DISPLAYED.', 'info');
+            } else if (cmd === 'exit') {
+                hideTerminal();
+            } else if (cmd === 'query') {
+                handleQueryCommand(args);
+            } else if (cmd === 'status') {
+                handleStatusCommand(args);
+            } else {
+                printTerminalMessage(`// ERROR: Command not found: "${cmd}". Type "help" for a list of available commands.`, 'error');
+            }
+            
+            terminalOutput.scrollTop = terminalOutput.scrollHeight;
+        }
+
+        /**
+         * Handles the 'status' command for persistent data update.
+         * @param {string} statusMessage The message to set as the public status.
+         */
+        function handleStatusCommand(statusMessage) {
+            if (!statusMessage) {
+                printTerminalMessage('// ERROR: Status command requires a message. Usage: status [message]', 'error');
+                return;
+            }
+            if (!isAuthReady) {
+                printTerminalMessage('// ERROR: System initialization pending. Try again in a moment.', 'error');
+                return;
+            }
+            updateStatus(statusMessage);
+        }
+
+
+        /**
+         * Handles the 'query' command for inline AI interaction.
+         * @param {string} query The user's prompt.
+         */
+        async function handleQueryCommand(query) {
+            if (!query) {
+                printTerminalMessage('// ERROR: Query command requires a prompt. Usage: query [prompt]', 'error');
+                return;
+            }
+            isProcessing = true;
+            printTerminalMessage('// AI_PROTOCOL_ENGAGED: PROCESSING_QUERY...', 'info');
+
+            try {
+                const systemPrompt = "You are a restricted command-line interface AI. Respond concisely and technically, or in a cryptic, sci-fi style. Do not use conversational language like 'I am' or 'Hello'. Summarize results in 1-2 sentences unless the request explicitly asks for detail.";
+                
+                const payload = {
+                    contents: [{ parts: [{ text: query }] }],
+                    tools: [{ "google_search": {} }],
+                    systemInstruction: { parts: [{ text: systemPrompt }] },
+                };
+
+                const response = await fetchWithRetry(apiUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                const result = await response.json();
+                const text = result.candidates?.[0]?.content?.parts?.[0]?.text || "// AI_PROTOCOL_FAILURE: UNKNOWN RESPONSE ERROR.";
+                
+                printTerminalMessage('// AI_RESPONSE_RECEIVED:', 'success');
+                printTerminalMessage(text);
+                
+                // Extract and display grounding sources if available
+                const groundingMetadata = result.candidates?.[0]?.groundingMetadata;
+                if (groundingMetadata && groundingMetadata.groundingAttributions) {
+                    const sources = groundingMetadata.groundingAttributions
+                        .map(attr => attr.web?.title)
+                        .filter(title => title);
+
+                    if (sources.length > 0) {
+                        printTerminalMessage(`// DATA_SOURCE(S): ${sources.join(' | ')}`, 'info');
+                    }
+                }
+
+            } catch (error) {
+                printTerminalMessage(`// AI_PROTOCOL_FAILURE: Connection Error - ${error.message}`, 'error');
+            } finally {
+                isProcessing = false;
+                terminalOutput.scrollTop = terminalOutput.scrollHeight;
+                commandInput.focus();
+            }
+        }
+
+        /**
+         * Exponential backoff utility for fetch requests.
+         * @param {string} url 
+         * @param {object} options 
+         * @param {number} retries 
+         * @returns {Promise<Response>}
+         */
+        async function fetchWithRetry(url, options, retries = 3) {
+            for (let i = 0; i < retries; i++) {
+                try {
+                    const response = await fetch(url, options);
+                    if (!response.ok) {
+                        if (i === retries - 1) throw new Error(`HTTP error! status: ${response.status}`);
+                        // Don't retry on 4xx errors, but will retry on 5xx or network issues
+                        if (response.status >= 400 && response.status < 500) {
+                            throw new Error(`Client error: status ${response.status}`);
+                        }
+                        await new Promise(resolve => setTimeout(resolve, Math.pow(2, i) * 1000));
+                    } else {
+                        return response;
+                    }
+                } catch (error) {
+                    if (i === retries - 1) throw error;
+                    await new Promise(resolve => setTimeout(resolve, Math.pow(2, i) * 1000));
+                }
+            }
+            throw new Error('Fetch failed after multiple retries.');
+        }
+
+        /**
+         * Displays the help message in the terminal.
+         */
+        function showHelp() {
+            const helpText = `
+// AVAILABLE COMMANDS:
+//   help     - Display this command list.
+//   clear    - Clear the terminal screen.
+//   settings - Toggle the configuration panel for visual tuning.
+//   query    - Execute an AI system query. Usage: query [prompt]
+//   status   - Update the public global status. Usage: status [message]
+//   exit     - Close the terminal interface.
+`;
+            printTerminalMessage(helpText, 'info');
+        }
+
+        // --- UI/Event Handlers ---
+
+        /**
+         * Handles key presses in the input field (Enter, Up, Down).
+         */
+        function handleInputKeydown(e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                processCommand(commandInput.value);
+            } else if (e.key === 'ArrowUp') {
+                e.preventDefault();
+                if (commandHistory.length > 0) {
+                    historyIndex = Math.min(historyIndex + 1, commandHistory.length - 1);
+                    commandInput.value = commandHistory[historyIndex];
+                }
+            } else if (e.key === 'ArrowDown') {
+                e.preventDefault();
+                historyIndex = Math.max(historyIndex - 1, -1);
+                commandInput.value = historyIndex === -1 ? '' : commandHistory[historyIndex];
+            }
+        }
+
+        /**
+         * Shows the terminal interface.
+         */
+        function showTerminal() {
+            landingPage.classList.add('hidden');
+            askFloatBtn.classList.remove('hidden');
+            
+            // Hide the main page content (sections) while terminal is open
+            document.querySelector('main').classList.add('hidden');
+
             // Show the terminal overlay
             terminalWrapper.classList.remove('hidden');
             terminalWrapper.classList.add('flex');
@@ -867,38 +810,246 @@
             // Run the terminal boot sequence
             runBootSequence();
         }
-        
+
+        /**
+         * Hides the terminal interface.
+         */
+        function hideTerminal() {
+            landingPage.classList.remove('hidden');
+            askFloatBtn.classList.add('hidden');
+            
+            // Show the main page content (sections) when terminal is closed
+            document.querySelector('main').classList.remove('hidden');
+
+            terminalWrapper.classList.add('hidden');
+            terminalWrapper.classList.remove('flex');
+            toggleSettingsSidebar('hide');
+        }
+
+        /**
+         * Toggles the settings sidebar visibility.
+         * @param {'show'|'hide'} [action] Force show or hide.
+         */
+        function toggleSettingsSidebar(action) {
+            const isVisible = settingsSidebar.classList.contains('translate-x-0');
+
+            if (action === 'show' || (!isVisible && action !== 'hide')) {
+                settingsSidebar.classList.remove('translate-x-full');
+                settingsSidebar.classList.add('translate-x-0');
+            } else {
+                settingsSidebar.classList.remove('translate-x-0');
+                settingsSidebar.classList.add('translate-x-full');
+            }
+        }
+
+        // --- Color and Settings Logic ---
+
+        /**
+         * Renders the color selection circles in the sidebar.
+         */
+        function renderColorOptions() {
+            colorOptionsContainer.innerHTML = '';
+            
+            // Set the initially selected color based on current state or default 'amber'
+            const currentColor = localStorage.getItem('terminalColor') || 'amber';
+            selectedColor = currentColor;
+
+            Object.keys(colorOptions).forEach(colorKey => {
+                const color = colorOptions[colorKey];
+                const div = document.createElement('div');
+                div.className = 'color-option';
+                div.title = color.name;
+                div.dataset.color = colorKey;
+                div.style.backgroundColor = color.main;
+                div.style.borderColor = color.main;
+
+                if (colorKey === currentColor) {
+                    div.classList.add('selected');
+                }
+
+                div.addEventListener('click', () => {
+                    // Remove selected from all
+                    document.querySelectorAll('.color-option').forEach(opt => opt.classList.remove('selected'));
+                    
+                    // Add selected to clicked element
+                    div.classList.add('selected');
+                    selectedColor = colorKey;
+                });
+                
+                colorOptionsContainer.appendChild(div);
+            });
+        }
+
+        /**
+         * Applies the selected color scheme to the terminal interface.
+         * @param {string} colorKey 
+         * @param {'boot'|'user'} [mode='user'] Controls whether a message is printed.
+         */
+        function applyTerminalColors(colorKey, mode = 'user') {
+            const colorMap = colorOptions[colorKey];
+            if (!colorMap) return;
+
+            const root = document.documentElement;
+            
+            // Apply variables to CSS root
+            root.style.setProperty('--main-color', colorMap.main);
+            root.style.setProperty('--info-color', colorMap.info);
+            root.style.setProperty('--success-color', colorMap.success);
+            root.style.setProperty('--error-color', colorMap.error);
+            root.style.setProperty('--prompt-color', colorMap.prompt);
+
+            // Update main container's box shadow and glow (Amber theme specific)
+            terminalContainer.style.borderColor = colorMap.main;
+            terminalContainer.style.boxShadow = `0 0 15px ${colorMap.main}`;
+            
+            // Update the main body/landing page colors to match the terminal theme
+            document.body.className = `bg-[#0d0101] text-[${colorMap.main}] min-h-screen flex flex-col items-center p-4 font-mono`;
+            document.getElementById('landing-page').querySelector('h1').className = `text-5xl md:text-7xl font-bold mb-8 drop-shadow-[0_0_15px_rgba(${parseInt(colorMap.main.substring(1,3), 16)},${parseInt(colorMap.main.substring(3,5), 16)},${parseInt(colorMap.main.substring(5,7), 16)},0.7)] tracking-wider`;
+            
+            // Update the launch button color based on the new theme
+            const launchBtnElement = document.getElementById('launch-btn');
+            if (launchBtnElement) {
+                // Get a slightly darker/complementary hover color for the button
+                let hoverColor = '#ff8c4a'; // Default for amber
+                if (colorKey === 'green') hoverColor = '#1e7e34';
+                if (colorKey === 'cyan') hoverColor = '#1a8a9a';
+
+                launchBtnElement.className = `bg-[${colorMap.main}] text-black font-bold py-3 px-8 rounded-lg uppercase shadow-[0_0_10px_${colorMap.main}] hover:bg-[${hoverColor}] transition duration-300 transform hover:scale-105`;
+            }
+
+            // Update navigation links to match the new theme colors
+            document.querySelectorAll('.nav-link').forEach(link => {
+                link.style.color = colorMap.main;
+                link.style.textShadow = `0 0 5px ${colorMap.main + '80'}`;
+            });
+
+
+            // Apply CRT glow shadow to the terminal text
+            let terminalThemeStyle = document.head.querySelector('[data-glow-style]');
+            if (!terminalThemeStyle) {
+                terminalThemeStyle = document.createElement('style');
+                terminalThemeStyle.setAttribute('data-glow-style', 'true');
+                document.head.appendChild(terminalThemeStyle);
+            }
+            terminalThemeStyle.innerHTML = `
+                .terminal-theme {
+                    text-shadow: 0 0 7px ${colorMap.main + 'c0'}; /* Slightly transparent glow */
+                }
+            `;
+
+
+            if (mode === 'user') {
+                printTerminalMessage(`// SYSTEM_STATUS: Theme applied successfully: ${colorMap.name}`, 'success');
+            }
+        }
+
+        /**
+         * Saves the selected color scheme to local storage and applies it.
+         */
+        function saveSettings() {
+            localStorage.setItem('terminalColor', selectedColor);
+            applyTerminalColors(selectedColor);
+            toggleSettingsSidebar('hide');
+        }
+
         /**
          * Loads saved terminal color from local storage on initial page load.
          */
         function loadSavedSettings() {
-            const savedColor = localStorage.getItem('terminalColor');
+            // Default to 'amber' if nothing is saved
+            const savedColor = localStorage.getItem('terminalColor') || 'amber'; 
             if (savedColor) {
                 // Use 'boot' to suppress the terminal message during startup
                 applyTerminalColors(savedColor, 'boot'); 
+                selectedColor = savedColor;
+            }
+            renderColorOptions(); // Render options after loading the saved color
+        }
+
+
+        // --- Modal AI Query Functions ---
+
+        function showAskModal() {
+            askModalWrapper.classList.remove('hidden');
+            askModalWrapper.classList.add('flex');
+            askModalInput.focus();
+            modalResponse.innerHTML = '';
+            askModalInput.value = '';
+        }
+
+        function closeAskModal() {
+            askModalWrapper.classList.add('hidden');
+            askModalWrapper.classList.remove('flex');
+            modalLoadingIndicator.classList.add('hidden');
+        }
+
+        async function handleModalAsk() {
+            const query = askModalInput.value.trim();
+            if (!query) return;
+
+            askModalInput.disabled = true;
+            askModalSubmit.disabled = true;
+            modalResponse.innerHTML = '';
+            modalLoadingIndicator.classList.remove('hidden');
+
+            try {
+                const systemPrompt = "You are a highly capable AI assistant specializing in conceptualizing and providing technical outlines, creative ideas, and detailed explanations. Provide a thoughtful and complete response to the user's high-level query.";
+                
+                const payload = {
+                    contents: [{ parts: [{ text: query }] }],
+                    tools: [{ "google_search": {} }],
+                    systemInstruction: { parts: [{ text: systemPrompt }] },
+                };
+
+                const response = await fetchWithRetry(apiUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                const result = await response.json();
+                const text = result.candidates?.[0]?.content?.parts?.[0]?.text || "[[ ERROR: Failed to retrieve a structured response from the system. ]]";
+                
+                modalResponse.innerHTML = formatOutput(text);
+
+            } catch (error) {
+                modalResponse.innerHTML = `<span class="text-[#ff6347]">[[ ERROR: Connection failure or API error. Check console for details. ]]</span>`;
+                console.error('Modal API Error:', error);
+            } finally {
+                modalLoadingIndicator.classList.add('hidden');
+                askModalInput.disabled = false;
+                askModalSubmit.disabled = false;
+                askModalInput.focus();
             }
         }
 
 
         // --- Initialization ---
-
+        
         // Attach event listeners
         launchBtn.addEventListener('click', showTerminal);
         settingsToggleBtn.addEventListener('click', toggleSettingsSidebar);
-        closeSettingsBtn.addEventListener('click', toggleSettingsSidebar);
+        closeSettingsBtn.addEventListener('click', () => toggleSettingsSidebar('hide'));
+        saveSettingsBtn.addEventListener('click', saveSettings);
+        commandInput.addEventListener('keydown', handleInputKeydown);
+        
+        // New Terminal Control Buttons
+        rebootBtn.addEventListener('click', runBootSequence);
+        closeTerminalBtn.addEventListener('click', hideTerminal);
         
         // New Ask AI button and modal listeners
         askFloatBtn.addEventListener('click', showAskModal);
         askModalClose.addEventListener('click', closeAskModal);
         askModalSubmit.addEventListener('click', handleModalAsk);
         askModalInput.addEventListener('keydown', (e) => {
-            if (e.key === 'Enter') {
+            if (e.key === 'Enter' && !e.shiftKey) { // Allow Shift+Enter for new line
                 e.preventDefault();
                 handleModalAsk();
             }
         });
         
         loadSavedSettings();
+        initFirebase(); // Initialize Firebase on page load
 
     </script>
 
