@@ -32,7 +32,7 @@
             height: 95%;
             max-height: 700px;
             border: 2px solid var(--main-color);
-            /* Initial shadow based on default color */
+            /* Initial shadow based on default color - this will be updated dynamically */
             box-shadow: 0 0 20px rgba(0, 255, 65, 0.7), inset 0 0 10px rgba(0, 255, 65, 0.3);
             background-color: rgba(0, 0, 0, 0.85);
             display: flex;
@@ -90,7 +90,7 @@
             50% { opacity: 0; }
         }
 
-        /* Settings Sidebar Styles (retained) */
+        /* Settings Sidebar Styles */
         #settings-sidebar {
             position: fixed;
             top: 0;
@@ -103,46 +103,148 @@
             transform: translateX(300px); /* Start off-screen */
             transition: transform 0.3s ease-in-out;
             padding: 20px;
-            box-shadow: -5px 0 15px rgba(0, 255, 65, 0.5);
+            /* Dynamic shadow will be applied by JS based on main-color */
+            box-shadow: -5px 0 15px rgba(0, 255, 65, 0.5); 
             z-index: 50;
         }
 
         #settings-sidebar.open {
             transform: translateX(0); /* Slide in */
         }
+        
+        /* Ask Modal Styles */
+        #ask-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.9);
+            z-index: 60;
+            display: none; /* Controlled by JS */
+            align-items: center;
+            justify-content: center;
+            font-family: var(--font-mono);
+        }
+        .ask-modal-content {
+            width: 90%;
+            max-width: 600px;
+            background-color: #1a1a1a;
+            border: 2px solid var(--main-color);
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 0 30px rgba(0, 255, 65, 0.7);
+            color: var(--main-color);
+        }
     </style>
 </head>
-<body class="h-screen w-screen flex items-center justify-center bg-gray-900">
+<body class="bg-gray-900 scroll-smooth">
 
-    <!-- 1. The Public-Facing Landing Page -->
-    <div id="landing-page" class="w-full h-full flex flex-col items-center justify-center p-6 text-center transition-opacity duration-500 bg-gray-900">
+    <!-- 1. The Public-Facing Landing Page (Main Scrollable Content) -->
+    <div id="landing-page" class="w-full min-h-screen flex flex-col items-center p-0 md:p-6 bg-gray-900">
 
-        <header class="w-full max-w-xl flex justify-between items-center mb-16 px-4">
-            <!-- Redirect Button to Portfolio -->
-            <a id="landing-portfolio-btn" href="https://portfolio.yourdomain.com" target="_blank" class="px-5 py-2 text-md font-medium rounded-xl bg-red-600 text-white shadow-xl transition transform hover:scale-105 hover:bg-red-500 focus:outline-none focus:ring-4 focus:ring-red-700">
+        <!-- STICKY HEADER / NAVIGATION -->
+        <header class="w-full max-w-7xl sticky top-0 bg-gray-900/95 backdrop-blur-sm z-10 flex justify-between items-center py-4 px-6 border-b border-gray-700">
+            <!-- Redirect Button to Portfolio (Now pointing to the current page) -->
+            <a id="landing-portfolio-btn" href="#" class="px-5 py-2 text-md font-medium rounded-xl bg-red-600 text-white shadow-xl transition transform hover:scale-105 hover:bg-red-500 focus:outline-none focus:ring-4 focus:ring-red-700">
                 My Resume/Portfolio
             </a>
-            <nav class="space-x-4 text-gray-400 text-sm hidden sm:flex">
-                <a href="#" class="hover:text-blue-400 transition">About</a>
-                <a href="#" class="hover:text-blue-400 transition">Services</a>
-                <a href="#" class="hover:text-blue-400 transition">Contact</a>
+            <nav id="landing-nav" class="space-x-4 text-gray-400 text-sm hidden sm:flex">
+                <!-- Links now point to sections via HASH IDs -->
+                <a href="#about-section" class="hover:text-blue-400 transition">About</a>
+                <a href="#services-section" class="hover:text-blue-400 transition">Services</a>
+                <a href="#contact-section" class="hover:text-blue-400 transition">Contact</a>
             </nav>
         </header>
 
-        <div class="max-w-xl p-8 bg-gray-800 rounded-xl shadow-2xl border border-gray-700">
-            <h1 class="text-5xl font-extrabold text-blue-400 mb-4">Project Phoenix Online</h1>
-            <p class="text-gray-300 text-lg mb-8">
-                The infrastructure is stable and secure. We are preparing for the public launch. Thank you for your patience.
-            </p>
-            <!-- Terminal Launch Button -->
-            <button id="launch-btn" class="px-8 py-3 text-xl font-semibold rounded-full bg-yellow-500 text-gray-900 shadow-lg hover:bg-yellow-400 transition transform hover:scale-105">
-                ACCESS SYSTEM CONSOLE (Authorized Personnel Only)
-            </button>
+        <!-- HERO SECTION (Main Console Access) -->
+        <div class="w-full flex items-center justify-center p-6 text-center" style="min-height: 80vh;">
+            <div class="max-w-xl p-8 bg-gray-800 rounded-xl shadow-2xl border border-gray-700">
+                <h1 class="text-5xl font-extrabold text-blue-400 mb-4">Project Phoenix Online</h1>
+                <p class="text-gray-300 text-lg mb-8" id="landing-message">
+                    The infrastructure is stable and secure. We are preparing for the public launch. Thank you for your patience.
+                </p>
+                
+                <!-- Terminal Launch Button -->
+                <button id="launch-btn" class="px-8 py-3 text-xl font-semibold rounded-full bg-yellow-500 text-gray-900 shadow-lg hover:bg-yellow-400 transition transform hover:scale-105">
+                    ACCESS SYSTEM CONSOLE (Authorized Personnel Only)
+                </button>
+            </div>
         </div>
+        
+        <!-- ABOUT SECTION -->
+        <section id="about-section" class="w-full max-w-4xl p-12 my-20 bg-gray-800 rounded-xl shadow-2xl border-t-4 border-blue-500">
+            <h2 class="text-4xl font-bold text-blue-400 mb-6">About Project Phoenix</h2>
+            <p class="text-gray-300 text-lg mb-4">
+                Project Phoenix is a proof-of-concept digital environment designed to demonstrate robust full-stack development skills, focusing on interactive user interfaces, persistent data handling (via simulated backend/local storage), and dynamic real-time interaction. It simulates a command-line interface running on top of a modern, responsive web application.
+            </p>
+            <p class="text-gray-400 text-md">
+                This domain serves as a professional showcase, blending creative design (the hacker console) with functional utilities (the embedded commands). It represents a commitment to building engaging, high-performance web experiences.
+            </p>
+        </section>
 
-        <footer class="mt-16 text-sm text-gray-600">
+        <!-- SERVICES SECTION -->
+        <section id="services-section" class="w-full max-w-4xl p-12 my-20 bg-gray-800 rounded-xl shadow-2xl border-t-4 border-yellow-500">
+            <h2 class="text-4xl font-bold text-yellow-500 mb-6">Core System Services</h2>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8 text-gray-300">
+                <div>
+                    <h3 class="text-xl font-semibold mb-2 text-yellow-300">Console Utilities</h3>
+                    <p class="text-sm">Access to functional commands like `calc`, `time`, and `joke` to show integration capabilities and API fetching.</p>
+                </div>
+                <div>
+                    <h3 class="text-xl font-semibold mb-2 text-yellow-300">Simulated Network</h3>
+                    <p class="text-sm">Interactive, simulated tools like `ping`, `status`, and `exploit` demonstrate dynamic output and system responsiveness.</p>
+                </div>
+                <div>
+                    <h3 class="text-xl font-semibold mb-2 text-yellow-300">Theming & Persistence</h3>
+                    <p class="text-sm">User can customize terminal colors via GUI or command line (`color [hex]`), with settings stored for the next visit.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- CONTACT SECTION -->
+        <section id="contact-section" class="w-full max-w-4xl p-12 my-20 bg-gray-800 rounded-xl shadow-2xl border-t-4 border-red-500">
+            <h2 class="text-4xl font-bold text-red-500 mb-6">Secure Contact Protocol</h2>
+            <p class="text-gray-300 text-lg mb-6">
+                Direct communication is preferred through professional channels. Your designated email, <span class="text-yellow-400">devchrisstudios@gmail.com</span>, has been configured for direct secure communication.
+            </p>
+            <!-- Only Email Channel remains and is now full width -->
+            <div class="flex flex-col sm:flex-row space-y-4 sm:space-y-0 sm:space-x-4">
+                <a href="mailto:devchrisstudios@gmail.com" class="w-full text-center py-3 bg-red-700 text-white font-medium rounded-lg hover:bg-red-600 transition">Email Channel</a>
+                <!-- LinkedIn Tunnel removed as requested -->
+            </div>
+        </section>
+
+        <footer class="mt-16 text-sm text-gray-600 mb-8">
             &copy; 2025 Domain Secure Inc. All rights reserved.
         </footer>
+        
+        <!-- Floating ASK Button (New Feature) -->
+        <button id="ask-float-btn" class="fixed bottom-8 right-8 z-20 px-6 py-4 text-xl font-bold rounded-full bg-blue-600 text-white shadow-2xl transition transform hover:scale-110 hover:bg-blue-500 focus:outline-none focus:ring-4 focus:ring-blue-700">
+            ASK AI 🤖
+        </button>
+    </div>
+
+    <!-- 4. Ask Modal (Floating Popup) -->
+    <div id="ask-modal" class="hidden">
+        <div class="ask-modal-content">
+            <div class="flex justify-between items-center mb-4 border-b border-gray-700 pb-2">
+                <h4 class="text-xl font-bold text-yellow-500">Secure Knowledge Query (Gemini)</h4>
+                <button id="ask-modal-close" class="text-2xl text-red-500 hover:text-red-400">&times;</button>
+            </div>
+            
+            <p class="text-sm mb-4" style="color: var(--info-color);">Enter your query below. Responses are grounded by Google Search.</p>
+
+            <input type="text" id="ask-modal-input" placeholder="Type your question here..." class="w-full p-3 mb-4 bg-gray-900 border border-gray-700 rounded-md text-white font-mono placeholder-gray-500 outline-none focus:border-blue-500">
+            
+            <button id="ask-modal-submit" class="w-full py-3 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-500 transition">
+                Submit Query
+            </button>
+
+            <div id="ask-modal-output" class="mt-6 pt-4 border-t border-gray-800 text-sm overflow-y-auto max-h-60">
+                <!-- AI response and sources will appear here -->
+            </div>
+        </div>
     </div>
 
     <!-- 2. The Interactive Hacker Terminal (Hidden by default) -->
@@ -152,7 +254,6 @@
             <div id="input-line">
                 <span id="prompt">C:\\GHOST_SHELL></span>
                 <input type="text" id="command-input" disabled>
-                <!-- New button to toggle the sidebar/settings -->
                 <button id="settings-toggle" class="ml-2 px-3 py-1 bg-gray-800 text-yellow-500 border border-yellow-500 rounded-md hover:bg-gray-700 transition" title="Toggle Settings">
                     ⚙️
                 </button>
@@ -160,7 +261,7 @@
         </div>
     </div>
     
-    <!-- 3. New Sidebar for Other Functionality (Settings) -->
+    <!-- 3. Sidebar for Settings (Appearance & Utilities) -->
     <div id="settings-sidebar">
         <h3 class="text-2xl font-bold mb-4 border-b border-yellow-500 pb-2 text-yellow-500">SYSTEM SETTINGS</h3>
         
@@ -176,8 +277,8 @@
 
         <div class="mb-6">
             <h4 class="text-lg font-semibold mb-2" style="color: var(--info-color);">System Utilities</h4>
-            <!-- Portfolio Redirect in Terminal -->
-            <a href="https://portfolio.yourdomain.com" target="_blank" class="block w-full px-4 py-2 text-sm text-center bg-red-600 text-white rounded hover:bg-red-500 transition">
+            <!-- Portfolio Redirect in Terminal - Now pointing to the current page -->
+            <a href="#" class="block w-full px-4 py-2 text-sm text-center bg-red-600 text-white rounded hover:bg-red-500 transition">
                 Launch Portfolio Subdomain
             </a>
         </div>
@@ -194,12 +295,23 @@
         const settingsSidebar = document.getElementById('settings-sidebar');
         const settingsToggleBtn = document.getElementById('settings-toggle');
         const closeSettingsBtn = document.getElementById('close-settings-btn');
+        
+        // New global variables for Ask Modal
+        const askFloatBtn = document.getElementById('ask-float-btn');
+        const askModal = document.getElementById('ask-modal');
+        const askModalClose = document.getElementById('ask-modal-close');
+        const askModalInput = document.getElementById('ask-modal-input');
+        const askModalSubmit = document.getElementById('ask-modal-submit');
+        const askModalOutput = document.getElementById('ask-modal-output');
 
         const outputArea = document.getElementById('output-area');
         const inputField = document.getElementById('command-input');
         const promptSpan = document.getElementById('prompt');
         const root = document.documentElement;
         
+        // History and Persistence Variables
+        let commandHistory = [];
+        let historyIndex = -1; 
         const defaultTypingDelay = 30;
 
         // Sequence of messages displayed on terminal startup
@@ -211,7 +323,7 @@
             "Welcome, user. Type <span class='success'>'help'</span> for a list of available commands.",
             "\n"
         ];
-
+        
         // --- Core Utility Functions ---
 
         function printLine(text, className = '') {
@@ -257,9 +369,7 @@
         }
         
         /**
-         * Applies a new color theme based on a hex code.
-         * @param {string} mainColorHex - The primary color (e.g., '#ff0000').
-         * @param {string} [name='Custom'] - The name of the theme.
+         * Applies a new color theme based on a hex code and saves it to localStorage.
          */
         function applyTerminalColors(mainColorHex, name = 'Custom') {
             const container = document.querySelector('.terminal-container');
@@ -267,6 +377,9 @@
             
             // Set CSS variables
             root.style.setProperty('--main-color', color);
+
+            // Save color to local storage for persistence
+            localStorage.setItem('terminalColor', color);
 
             // Determine subtle shadow color for dynamic styling
             let r = parseInt(color.substring(1, 3), 16);
@@ -276,12 +389,48 @@
             // Recalculate shadow based on the new color components
             container.style.boxShadow = `0 0 20px rgba(${r}, ${g}, ${b}, 0.7), inset 0 0 10px rgba(${r}, ${g}, ${b}, 0.3)`;
 
-            // Update info/prompt colors dynamically for better contrast if needed (optional)
-            // For simplicity, we just confirm the change:
             if (name !== 'boot') {
                 printLine(`<span class='info'>[THEME]</span> Theme changed to ${name} (${mainColorHex}).`, 'info');
             }
         }
+
+        // --- Gemini API Utilities ---
+        const apiKey = ""; // Leave as-is for runtime injection
+        const geminiApiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`;
+
+        async function callGeminiApi(payload) {
+            const maxRetries = 5;
+            let delay = 1000; // 1 second
+
+            for (let i = 0; i < maxRetries; i++) {
+                try {
+                    const response = await fetch(geminiApiUrl, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload)
+                    });
+
+                    if (response.ok) {
+                        return response.json();
+                    } else if (response.status === 429) {
+                        // Rate limit exceeded, retry with backoff
+                        await new Promise(resolve => setTimeout(resolve, delay));
+                        delay *= 2; // Exponential backoff
+                    } else {
+                        // Other error, throw
+                        throw new Error(`API returned status ${response.status}: ${response.statusText}`);
+                    }
+                } catch (error) {
+                    if (i === maxRetries - 1) {
+                        throw error; // Throw if max retries reached
+                    }
+                    // Log and wait for next retry (silent backoff in console)
+                    await new Promise(resolve => setTimeout(resolve, delay));
+                    delay *= 2;
+                }
+            }
+        }
+
 
         // --- Command Handlers ---
 
@@ -292,38 +441,39 @@
             'ping': handlePing,
             'exploit': handleExploit,
             'settings': toggleSettingsSidebar,
-            'exit': handleExit, // NEW
-            'calc': handleCalc, // NEW
-            'joke': handleJoke, // NEW
-            'time': handleTime, // NEW
-            'color': handleColor // NEW (using applyTerminalColors)
+            'exit': handleExit, 
+            'calc': handleCalc,
+            'joke': handleJoke, 
+            'time': handleTime,
+            'color': handleColor,
+            'ask': handleAsk 
         };
 
         async function handleHelp() {
             printLine("Available System Commands:", 'info');
             printLine(`
-    <span class='success'>help</span>           - Displays this list of commands.
-    <span class='success'>clear</span>          - Clears the terminal screen.
-    <span class='success'>exit</span>           - Returns to the landing page. (New!)
-    <span class='success'>settings</span>       - Opens the graphical settings panel.
+    <span class='success'>help</span>           - Displays this list of commands.
+    <span class='success'>clear</span>          - Clears the terminal screen.
+    <span class='success'>exit</span>           - Returns to the landing page.
+    <span class='success'>settings</span>       - Opens the graphical settings panel.
     --- FUNCTIONAL UTILITIES ---
-    <span class='success'>time</span>           - Displays the current system time and date. (New!)
-    <span class='success'>calc [expr]</span>    - Evaluates a mathematical expression (e.g., calc 5 * (10 + 2)). (New!)
-    <span class='success'>joke</span>           - Fetches a random programming joke. (New!)
-    <span class='success'>color [hex]</span>    - Changes the terminal text/border color (e.g., color #ff00ff). (New!)
+    <span class='success'>time</span>           - Displays the current system time and date.
+    <span class='success'>calc [expr]</span>    - Evaluates a mathematical expression (e.g., calc 5 * (10 + 2)).
+    <span class='success'>joke</span>           - Fetches a random programming joke.
+    <span class='success'>color [hex]</span>    - Changes the terminal text/border color (e.g., color #ff00ff).
+    --- LLM-POWERED UTILITIES ---
+    <span class='success'>ask [query]</span>    - ✨ Queries the Gemini AI for real-time answers (e.g., ask what is the latest news on AI).
     --- SIMULATED TOOLS ---
-    <span class='success'>status</span>         - Checks the current system metrics.
-    <span class='success'>ping [ip]</span>      - Pings a simulated network address.
+    <span class='success'>status</span>         - Checks the current system metrics.
+    <span class='success'>ping [ip]</span>      - Pings a simulated network address.
     <span class='success'>exploit [target]</span> - Initiates a complex hacking simulation.
             `);
         }
         
-        // NEW COMMAND: Exit
         function handleExit() {
             terminalWrapper.classList.add('hidden');
             landingPage.classList.remove('hidden');
-            landingPage.classList.add('flex'); // Ensure centering is applied
-            // Clear output so boot runs clean next time
+            landingPage.classList.add('flex');
             outputArea.innerHTML = '';
             inputField.removeEventListener('keydown', handleInput);
             printLine("<span class='info'>[EXIT]</span> Session terminated. Returning to public domain.", 'info');
@@ -333,7 +483,6 @@
             outputArea.innerHTML = '';
         }
 
-        // NEW COMMAND: Calculate
         async function handleCalc(args) {
             const expression = args.slice(1).join('');
             if (!expression) {
@@ -351,7 +500,6 @@
             }
         }
 
-        // NEW COMMAND: Joke
         async function handleJoke() {
             await simulateTyping("<span class='info'>[FETCHING]</span> Querying humor database...", 30);
             
@@ -366,14 +514,13 @@
                 }
 
                 await simulateTyping(data.joke, 20);
-                printLine("", 'success'); // for spacing
+                printLine("", 'success');
 
             } catch (e) {
                 printLine(`<span class='error'>[NET ERROR]</span> Could not connect to Joke API: ${e.message}`, 'error');
             }
         }
 
-        // NEW COMMAND: Time
         async function handleTime() {
             const now = new Date();
             const timeString = now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true });
@@ -385,18 +532,72 @@
             `, 10);
         }
         
-        // NEW COMMAND: Color
         async function handleColor(args) {
             const hex = args[1];
             if (!hex || !/^#([0-9A-F]{3}){1,2}$/i.test(hex)) {
                 printLine("<span class='error'>[SYNTAX ERROR]</span> Usage: color #[hexcode] (e.g., color #FF00FF)", 'error');
                 return;
             }
-            
-            // Call the shared function to apply the theme
             applyTerminalColors(hex);
         }
 
+        async function handleAsk(args) {
+            const userQuery = args.slice(1).join(' ');
+            if (!userQuery) {
+                printLine("<span class='error'>[SYNTAX ERROR]</span> Usage: ask [query/question]", 'error');
+                return;
+            }
+
+            await simulateTyping("<span class='info'>[PROCESSING]</span> Querying secure Gemini LLM backbone (Grounding: Active)...", 30);
+            
+            const payload = {
+                contents: [{ parts: [{ text: userQuery }] }],
+                tools: [{ "google_search": {} }],
+                systemInstruction: {
+                    parts: [{ text: "You are a highly concise, helpful, and technically-oriented AI assistant for a secure terminal interface. Answer the user's query directly and briefly." }]
+                },
+            };
+
+            try {
+                const result = await callGeminiApi(payload);
+                const candidate = result.candidates?.[0];
+
+                if (candidate && candidate.content?.parts?.[0]?.text) {
+                    const llmResponse = candidate.content.parts[0].text;
+                    
+                    // Display the main response
+                    printLine("");
+                    await simulateTyping(`<span class='info'>[RESPONSE]</span> ${llmResponse}`, 20);
+
+                    // Handle grounding sources
+                    let sources = [];
+                    const groundingMetadata = candidate.groundingMetadata;
+                    if (groundingMetadata && groundingMetadata.groundingAttributions) {
+                        sources = groundingMetadata.groundingAttributions
+                            .map(attribution => ({
+                                uri: attribution.web?.uri,
+                                title: attribution.web?.title,
+                            }))
+                            .filter(source => source.uri && source.title); 
+                    }
+
+                    if (sources.length > 0) {
+                        printLine("\n<span class='success'>[GROUNDING]</span> Sources for verification:");
+                        sources.forEach((source, index) => {
+                            // Use a simple span/text for the link in the terminal style
+                            printLine(`    [${index + 1}] <a href="${source.uri}" target="_blank" class="info underline hover:no-underline">${source.title}</a>`);
+                        });
+                    }
+                } else {
+                    printLine("<span class='error'>[AI ERROR]</span> Failed to generate a valid response from the LLM.", 'error');
+                }
+
+            } catch (e) {
+                printLine(`<span class='error'>[API FAILURE]</span> Critical error accessing Gemini: ${e.message}`, 'error');
+                console.error(e);
+            }
+            printLine(""); // Newline for prompt alignment
+        }
 
         // --- Simulated Command Handlers (Retained) ---
 
@@ -461,6 +662,94 @@
         // Make theme function globally accessible from HTML onclick
         window.applyTerminalColors = (color, name) => applyTerminalColors(color, name);
 
+        // --- New Modal Ask Handlers ---
+
+        function showAskModal() {
+            askModal.style.display = 'flex';
+            // Clear previous content
+            askModalInput.value = '';
+            askModalOutput.innerHTML = '';
+            askModalSubmit.textContent = 'Submit Query';
+            askModalInput.focus();
+        }
+
+        function closeAskModal() {
+            askModal.style.display = 'none';
+        }
+
+        function printModalLine(text, className = '') {
+            const line = document.createElement('div');
+            line.className = className;
+            line.innerHTML = text;
+            askModalOutput.appendChild(line);
+            askModalOutput.scrollTop = askModalOutput.scrollHeight;
+        }
+
+        // Reusing the core Gemini API logic, but targeting modal output
+        async function handleModalAsk() {
+            const userQuery = askModalInput.value.trim();
+            if (!userQuery) {
+                printModalLine("<span class='error'>[SYNTAX ERROR]</span> Please enter a question.", 'error');
+                return;
+            }
+
+            askModalOutput.innerHTML = ''; // Clear previous output
+            askModalInput.disabled = true;
+            askModalSubmit.disabled = true;
+            askModalSubmit.textContent = 'Processing...';
+
+            printModalLine("<span class='info'>[PROCESSING]</span> Querying secure Gemini LLM backbone (Grounding: Active)...", 'info');
+            
+            const payload = {
+                contents: [{ parts: [{ text: userQuery }] }],
+                tools: [{ "google_search": {} }],
+                systemInstruction: {
+                    parts: [{ text: "You are a highly concise, helpful, and technically-oriented AI assistant. Answer the user's query directly and briefly." }]
+                },
+            };
+
+            try {
+                const result = await callGeminiApi(payload);
+                const candidate = result.candidates?.[0];
+
+                if (candidate && candidate.content?.parts?.[0]?.text) {
+                    const llmResponse = candidate.content.parts[0].text;
+                    
+                    printModalLine("<hr class='border-gray-800 my-2'>");
+                    printModalLine(`<span class='info'>[RESPONSE]</span> ${llmResponse}`);
+
+                    let sources = [];
+                    const groundingMetadata = candidate.groundingMetadata;
+                    if (groundingMetadata && groundingMetadata.groundingAttributions) {
+                        sources = groundingMetadata.groundingAttributions
+                            .map(attribution => ({
+                                uri: attribution.web?.uri,
+                                title: attribution.web?.title,
+                            }))
+                            .filter(source => source.uri && source.title); 
+                    }
+
+                    if (sources.length > 0) {
+                        printModalLine("\n<span class='success'>[GROUNDING]</span> Sources for verification:");
+                        sources.forEach((source, index) => {
+                            printModalLine(`    [${index + 1}] <a href="${source.uri}" target="_blank" class="text-blue-400 hover:underline">${source.title}</a>`);
+                        });
+                    }
+                } else {
+                    printModalLine("<span class='error'>[AI ERROR]</span> Failed to generate a valid response from the LLM.", 'error');
+                }
+
+            } catch (e) {
+                printModalLine(`<span class='error'>[API FAILURE]</span> Critical error accessing Gemini: ${e.message}`, 'error');
+                console.error(e);
+            } finally {
+                askModalInput.disabled = false;
+                askModalSubmit.disabled = false;
+                askModalSubmit.textContent = 'Submit Query';
+                askModalOutput.scrollTop = askModalOutput.scrollHeight;
+            }
+        }
+
 
         // --- Main Logic & Event Handling ---
 
@@ -472,7 +761,6 @@
             // Disable input field while command is executing
             inputField.disabled = true;
 
-            // Execute command and re-enable input
             const handler = commandHandlers[cmd];
             const result = handler ? handler(args) : null;
 
@@ -491,6 +779,9 @@
             }
         }
 
+        /**
+         * Handles user input, including Enter (execution), Arrow Keys (history), and Tab (completion).
+         */
         function handleInput(event) {
             if (event.key === 'Enter') {
                 const command = inputField.value.trim();
@@ -500,10 +791,48 @@
                 // Only execute if command is not empty
                 if (command) {
                     executeCommand(command);
+                    // Save command to history and reset index
+                    if (commandHistory[0] !== command) {
+                        commandHistory.unshift(command);
+                    }
                 }
 
                 inputField.value = '';
+                historyIndex = -1; // Reset history index
                 scrollToBottom();
+                return;
+            }
+
+            // History Navigation (Arrow Up/Down)
+            if (event.key === 'ArrowUp' || event.key === 'ArrowDown') {
+                event.preventDefault(); // Stop cursor movement
+                
+                if (commandHistory.length === 0) return;
+
+                if (event.key === 'ArrowUp') {
+                    historyIndex = Math.min(commandHistory.length - 1, historyIndex + 1);
+                } else if (event.key === 'ArrowDown') {
+                    historyIndex = Math.max(-1, historyIndex - 1);
+                }
+
+                if (historyIndex === -1) {
+                    inputField.value = '';
+                } else {
+                    inputField.value = commandHistory[historyIndex];
+                }
+            }
+
+            // Tab Completion
+            if (event.key === 'Tab') {
+                event.preventDefault(); // Stop default tab behavior
+                const input = inputField.value.trim().toLowerCase();
+                const commands = Object.keys(commandHandlers);
+
+                const match = commands.find(cmd => cmd.startsWith(input));
+
+                if (match) {
+                    inputField.value = match;
+                }
             }
         }
 
@@ -512,7 +841,7 @@
 
             inputField.disabled = true;
 
-            // Faster delays for boot as requested
+            // Faster delays for boot
             const bootTypingDelay = 0; 
             const bootLineDelay = 10; 
 
@@ -528,17 +857,49 @@
         }
 
         function showTerminal() {
-            landingPage.classList.add('hidden');
+            // Hide the landing page content wrapper
+            landingPage.classList.add('hidden'); 
+            
+            // Show the terminal overlay
             terminalWrapper.classList.remove('hidden');
             terminalWrapper.classList.add('flex');
-
+            
+            // Run the terminal boot sequence
             runBootSequence();
         }
+        
+        /**
+         * Loads saved terminal color from local storage on initial page load.
+         */
+        function loadSavedSettings() {
+            const savedColor = localStorage.getItem('terminalColor');
+            if (savedColor) {
+                // Use 'boot' to suppress the terminal message during startup
+                applyTerminalColors(savedColor, 'boot'); 
+            }
+        }
+
+
+        // --- Initialization ---
 
         // Attach event listeners
         launchBtn.addEventListener('click', showTerminal);
         settingsToggleBtn.addEventListener('click', toggleSettingsSidebar);
         closeSettingsBtn.addEventListener('click', toggleSettingsSidebar);
+        
+        // New Ask AI button and modal listeners
+        askFloatBtn.addEventListener('click', showAskModal);
+        askModalClose.addEventListener('click', closeAskModal);
+        askModalSubmit.addEventListener('click', handleModalAsk);
+        askModalInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                handleModalAsk();
+            }
+        });
+        
+        loadSavedSettings();
+
     </script>
 
 </body>
