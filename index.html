@@ -78,7 +78,7 @@
         /* Styling for different message types */
         .info-message { color: var(--info-color); }
         .success-message { color: var(--success-color); }
-        .error-message { color: var(--error-message); }
+        .error-message { color: var(--error-color); }
         .typing-effect::after {
             content: '_';
             animation: blink 0.7s infinite;
@@ -273,7 +273,7 @@
                     </span>
                 </div>
                 <!-- Right Section: Control Buttons -->
-                <div class="flex space-x-2">
+                <div class="flex space-space-x-2">
                     <button id="reboot-btn" 
                             class="text-sm px-2 py-0.5 rounded border border-transparent 
                                    hover:border-[#ff6347] transition duration-150 text-[var(--error-color)]">
@@ -340,6 +340,9 @@
         const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
         const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {};
         const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
+        
+        // --- NEW: Target Email Address ---
+        const ADMIN_EMAIL = 'devchrisstudios@gmail.com'; 
 
         // Firebase state variables
         let db;
@@ -370,7 +373,7 @@
         const askFloatBtn = document.getElementById('ask-float-btn');
         const askModalWrapper = document.getElementById('ask-modal-wrapper');
         const askModalClose = document.getElementById('ask-modal-close');
-        const askModalEmail = document.getElementById('ask-modal-email'); // NEW: Email input
+        const askModalEmail = document.getElementById('ask-modal-email'); 
         const askModalInput = document.getElementById('ask-modal-input');
         const askModalSubmit = document.getElementById('ask-modal-submit');
         const modalResponse = document.getElementById('modal-response');
@@ -468,12 +471,16 @@
          */
         function updateUserDisplay(id) {
             const shortId = id.substring(0, 8) + '...';
+            const fullUserIdSpan = document.querySelector('#user-display .full-user-id');
             userDisplay.innerHTML = `
                 // USER_ID: ${shortId}
                 <span class="full-user-id">// FULL ID: ${id}</span>
             `;
-            // Re-select the full ID element to apply the class
-            document.querySelector('.full-user-id').textContent = `// FULL ID: ${id}`;
+            // Re-select and update the full ID element if it exists in the new structure
+            const newFullUserIdSpan = document.querySelector('#user-display .full-user-id');
+            if(newFullUserIdSpan) {
+                newFullUserIdSpan.textContent = `// FULL ID: ${id}`;
+            }
         }
 
         // --- Firestore Real-Time Functionality ---
@@ -692,6 +699,34 @@
             updateStatus(statusMessage);
         }
 
+        /**
+         * Constructs and opens a Gmail compose link to simulate sending the ticket.
+         * @param {string} email User's response email.
+         * @param {string} details The ticket message body.
+         * @param {string} source 'Terminal' or 'Modal'
+         * @returns {string} The success message to display.
+         */
+        function sendTicketViaMailto(email, details, source) {
+            const subject = encodeURIComponent(`[Project Phoenix Ticket] New submission from ${email}`);
+            const body = encodeURIComponent(
+                `Source: ${source} Interface\n` +
+                `Response Email: ${email}\n` +
+                `User ID: ${userId.substring(0, 16)}...\n` +
+                `----------------------------------\n` +
+                `TICKET DETAILS:\n${details}`
+            );
+
+            // NEW: Use the Gmail compose link format to open Gmail directly
+            const gmailLink = `https://mail.google.com/mail/?view=cm&fs=1&to=${ADMIN_EMAIL}&su=${subject}&body=${body}`;
+            
+            // Open Gmail in a new tab
+            window.open(gmailLink, '_blank');
+            
+            return `// TICKET_PROTOCOL_ENGAGED: Gmail has been launched in a new tab.
+// RECIPIENT: ${ADMIN_EMAIL}
+// STATUS: Awaiting 'Send' action in the Gmail window.
+// NOTE: You must click 'Send' in the new window/tab to complete transmission.`;
+        }
 
         /**
          * Handles the 'ticket' command for inline ticket submission.
@@ -719,19 +754,13 @@
             }
 
             isProcessing = true;
-            printTerminalMessage('// TICKET_PROTOCOL_ENGAGED: SUBMITTING_TICKET...', 'info');
+            printTerminalMessage('// TICKET_PROTOCOL_ENGAGED: PREPARING_TRANSMISSION...', 'info');
 
-            // Simulate network delay for ticket submission
-            await new Promise(resolve => setTimeout(resolve, 1500 + Math.random() * 1000));
+            // 1. Send via mailto link (now opens Gmail)
+            const successMessage = sendTicketViaMailto(email, ticketDetails, 'Terminal');
             
-            const ticketId = Math.random().toString(36).substring(2, 10).toUpperCase();
-
-            printTerminalMessage('// TICKET_RESPONSE_RECEIVED:', 'success');
-            printTerminalMessage(`// TICKET_ID: ${ticketId} SUBMITTED.`);
-            printTerminalMessage(`// RESPONSE_ADDRESS: ${email}`); // NEW: Display email
-            printTerminalMessage(`// DESCRIPTION: "${ticketDetails}"`);
-            printTerminalMessage(`// STATUS: Pending administrator review. Do not submit duplicates.`);
-
+            // 2. Display success message
+            printTerminalMessage(successMessage, 'success');
 
             isProcessing = false;
             terminalOutput.scrollTop = terminalOutput.scrollHeight;
@@ -887,7 +916,13 @@
             
             // Update the main body/landing page colors to match the terminal theme
             document.body.className = `bg-[#0d0101] text-[${colorMap.main}] min-h-screen flex flex-col items-center p-4 font-mono`;
-            document.getElementById('landing-page').querySelector('h1').className = `text-5xl md:text-7xl font-bold mb-8 drop-shadow-[0_0_15px_rgba(${parseInt(colorMap.main.substring(1,3), 16)},${parseInt(colorMap.main.substring(3,5), 16)},${parseInt(colorMap.main.substring(5,7), 16)},0.7)] tracking-wider`;
+            
+            // Convert main color hex to RGB for the drop shadow calculation
+            const r = parseInt(colorMap.main.substring(1, 3), 16);
+            const g = parseInt(colorMap.main.substring(3, 5), 16);
+            const b = parseInt(colorMap.main.substring(5, 7), 16);
+
+            document.getElementById('landing-page').querySelector('h1').className = `text-5xl md:text-7xl font-bold mb-8 drop-shadow-[0_0_15px_rgba(${r},${g},${b},0.7)] tracking-wider`;
             
             // Update the launch button color based on the new theme
             const launchBtnElement = document.getElementById('launch-btn');
@@ -897,7 +932,21 @@
                 if (colorKey === 'green') hoverColor = '#1e7e34';
                 if (colorKey === 'cyan') hoverColor = '#1a8a9a';
 
+                // Use attribute modification for Tailwind to pick up dynamic colors correctly
+                launchBtnElement.setAttribute('style', 
+                    `background-color: ${colorMap.main}; 
+                     box-shadow: 0 0 10px ${colorMap.main};
+                     --tw-ring-color: ${colorMap.main};`);
+                launchBtnElement.onmouseover = () => {
+                    launchBtnElement.style.backgroundColor = hoverColor;
+                };
+                launchBtnElement.onmouseout = () => {
+                    launchBtnElement.style.backgroundColor = colorMap.main;
+                };
+
+                // The default classes handle the rest of the styling
                 launchBtnElement.className = `bg-[${colorMap.main}] text-black font-bold py-3 px-8 rounded-lg uppercase shadow-[0_0_10px_${colorMap.main}] hover:bg-[${hoverColor}] transition duration-300 transform hover:scale-105`;
+
             }
 
             // Update navigation links to match the new theme colors
@@ -990,30 +1039,27 @@
             modalLoadingIndicator.classList.remove('hidden');
 
             try {
-                // Simulate network delay for ticket submission
-                await new Promise(resolve => setTimeout(resolve, 1500 + Math.random() * 1000));
-                
-                const ticketId = Math.random().toString(36).substring(2, 10).toUpperCase();
-
-                const successMessage = `
-// TICKET SUBMITTED SUCCESSFULLY.
-// TICKET ID: ${ticketId}
-// RESPONSE ADDRESS: ${email}
-// DESCRIPTION: "${query.substring(0, 50)}..."
-// STATUS: Awaiting assignment. A system agent will process your request shortly.
-                `;
+                // Use the new mailto function (now opens Gmail)
+                const successMessage = sendTicketViaMailto(email, query, 'Modal');
 
                 modalResponse.innerHTML = formatOutput(successMessage);
+                
+                // --- NEW TWEAK: Clear and Close on Success ---
+                setTimeout(() => {
+                    askModalEmail.value = ''; // Clear email
+                    askModalInput.value = ''; // Clear details
+                    closeAskModal(); // Close the modal
+                }, 4000); // Give the user 4 seconds to read the success message
 
             } catch (error) {
-                modalResponse.innerHTML = `<span class="text-[#ff6347]">[[ ERROR: System failure during ticket transmission. Check your connection. ]]</span>`;
+                modalResponse.innerHTML = `<span class="text-[#ff6347]">[[ ERROR: System failure during email link generation. ]]</span>`;
                 console.error('Modal Ticket Error:', error);
             } finally {
                 modalLoadingIndicator.classList.add('hidden');
                 askModalInput.disabled = false;
                 askModalEmail.disabled = false;
                 askModalSubmit.disabled = false;
-                // Keep the modal open to allow the user to read the response
+                // Note: The modal closure is now handled by the setTimeout inside the try block
             }
         }
 
