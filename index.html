@@ -3,21 +3,20 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>G H O S T - S Y S T E M | C O N S O L E</title>
-    <!-- Load Space Mono font for the classic terminal look -->
+    <title>S E C R E T | D O M A I N</title>
+    <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
     <style>
-        /* Custom CSS for the "Hacker" Aesthetic and Layout */
-        body, html {
-            height: 100%;
-            margin: 0;
-            overflow: hidden;
-            background-color: #000000; /* Pure black background */
-            font-family: 'Space Mono', monospace;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            font-size: 14px;
+        /* Configure Tailwind to use the Space Mono font when available */
+        :root {
+            --font-mono: 'Space Mono', monospace;
+        }
+
+        /* Custom CSS for the Terminal Interface (Hacker Aesthetic) */
+        .terminal-theme {
+            background-color: #000000;
+            color: #00ff41;
+            font-family: var(--font-mono);
         }
 
         .terminal-container {
@@ -26,26 +25,23 @@
             height: 95%;
             max-height: 700px;
             border: 2px solid #00ff41;
-            box-shadow: 0 0 20px rgba(0, 255, 65, 0.7), inset 0 0 10px rgba(0, 255, 65, 0.3); /* Intense green glow */
+            box-shadow: 0 0 20px rgba(0, 255, 65, 0.7), inset 0 0 10px rgba(0, 255, 65, 0.3);
             background-color: rgba(0, 0, 0, 0.85);
             display: flex;
             flex-direction: column;
             border-radius: 8px;
             overflow: hidden;
+            box-sizing: border-box;
         }
 
-        /* The main output area */
         #output-area {
             flex-grow: 1;
             padding: 15px;
             overflow-y: auto;
-            color: #00ff41; /* Neon green text */
             white-space: pre-wrap;
-            box-sizing: border-box;
             line-height: 1.4;
         }
 
-        /* The input line */
         #input-line {
             display: flex;
             padding: 10px 15px;
@@ -54,7 +50,7 @@
         }
 
         #prompt {
-            color: #ffc107; /* Yellow/Amber prompt */
+            color: #ffc107;
             margin-right: 5px;
             user-select: none;
             flex-shrink: 0;
@@ -65,20 +61,18 @@
             background: transparent;
             border: none;
             color: #00ff41;
-            font-family: 'Space Mono', monospace;
+            font-family: var(--font-mono);
             font-size: 14px;
-            outline: none; /* Remove focus outline */
-            caret-color: #00ff41; /* Green cursor */
+            outline: none;
+            caret-color: #00ff41;
             padding: 0;
         }
 
-        /* Utility classes for themed output */
-        .info { color: #87ceeb; } /* Light Blue */
-        .success { color: #32cd32; } /* Lime Green */
-        .error { color: #ff6347; } /* Tomato Red */
-        .user-input { color: #ffffff; } /* White for echoed command */
+        .info { color: #87ceeb; }
+        .success { color: #32cd32; }
+        .error { color: #ff6347; }
+        .user-input { color: #ffffff; }
 
-        /* Blinking text for realism */
         .blink {
             animation: blinker 1s linear infinite;
         }
@@ -86,45 +80,121 @@
             50% { opacity: 0; }
         }
 
-        /* Responsive adjustments */
-        @media (max-width: 600px) {
-            body { font-size: 12px; }
-            .terminal-container {
-                width: 100%;
-                height: 100%;
-                border: none;
-                box-shadow: none;
-                border-radius: 0;
-            }
+        /* New CSS for the Settings Sidebar */
+        #settings-sidebar {
+            position: fixed;
+            top: 0;
+            right: 0;
+            width: 300px;
+            height: 100vh;
+            background-color: #1a1a1a;
+            color: #00ff41;
+            transform: translateX(300px); /* Start off-screen */
+            transition: transform 0.3s ease-in-out;
+            padding: 20px;
+            box-shadow: -5px 0 15px rgba(0, 255, 65, 0.5);
+            z-index: 50;
+        }
+
+        #settings-sidebar.open {
+            transform: translateX(0); /* Slide in */
         }
     </style>
 </head>
-<body>
+<body class="h-screen w-screen flex items-center justify-center bg-gray-900">
 
-    <div class="terminal-container">
-        <div id="output-area"></div>
-        <div id="input-line">
-            <span id="prompt">C:\\GHOST_SHELL></span>
-            <input type="text" id="command-input" autofocus>
+    <div id="landing-page" class="w-full h-full flex flex-col items-center justify-center p-6 text-center transition-opacity duration-500 bg-gray-900">
+
+        <header class="w-full max-w-xl flex justify-between items-center mb-16 px-4">
+            <a id="landing-portfolio-btn" href="https://portfolio.yourdomain.com" target="_blank" class="px-5 py-2 text-md font-medium rounded-xl bg-red-600 text-white shadow-xl transition transform hover:scale-105 hover:bg-red-500 focus:outline-none focus:ring-4 focus:ring-red-700">
+                **My Resume/Portfolio**
+            </a>
+            <nav class="space-x-4 text-gray-400 text-sm hidden sm:flex">
+                <a href="#" class="hover:text-blue-400 transition">About</a>
+                <a href="#" class="hover:text-blue-400 transition">Services</a>
+                <a href="#" class="hover:text-blue-400 transition">Contact</a>
+            </nav>
+        </header>
+
+        <div class="max-w-xl p-8 bg-gray-800 rounded-xl shadow-2xl border border-gray-700">
+            <h1 class="text-5xl font-extrabold text-blue-400 mb-4">Project Phoenix Online</h1>
+            <p class="text-gray-300 text-lg mb-8">
+                The infrastructure is stable and secure. We are preparing for the public launch. Thank you for your patience.
+            </p>
+            <button id="launch-btn" class="px-8 py-3 text-xl font-semibold rounded-full bg-yellow-500 text-gray-900 shadow-lg hover:bg-yellow-400 transition transform hover:scale-105">
+                **ACCESS SYSTEM CONSOLE** (Authorized Personnel Only)
+            </button>
         </div>
+
+        <footer class="mt-16 text-sm text-gray-600">
+            &copy; 2025 Domain Secure Inc. All rights reserved.
+        </footer>
+    </div>
+
+    <div id="terminal-wrapper" class="hidden absolute top-0 left-0 w-full h-full flex items-center justify-center terminal-theme">
+        <div class="terminal-container">
+            <div id="output-area"></div>
+            <div id="input-line">
+                <span id="prompt">C:\\GHOST_SHELL></span>
+                <input type="text" id="command-input" disabled>
+                <button id="settings-toggle" class="ml-2 px-3 py-1 bg-gray-800 text-yellow-500 border border-yellow-500 rounded-md hover:bg-gray-700 transition" title="Toggle Settings">
+                    ⚙️
+                </button>
+            </div>
+        </div>
+    </div>
+    
+    <div id="settings-sidebar">
+        <h3 class="text-2xl font-bold mb-4 border-b border-yellow-500 pb-2 text-yellow-500">SYSTEM SETTINGS</h3>
+        
+        <div class="mb-6">
+            <h4 class="text-lg font-semibold mb-2 text-info">Terminal Appearance</h4>
+            <div class="space-y-2">
+                <button onclick="changeTheme('green')" class="w-full px-4 py-2 text-sm bg-green-900 text-green-400 rounded hover:bg-green-800">Theme: Green Matrix</button>
+                <button onclick="changeTheme('blue')" class="w-full px-4 py-2 text-sm bg-blue-900 text-blue-400 rounded hover:bg-blue-800">Theme: Blue ICE</button>
+                <button onclick="changeTheme('red')" class="w-full px-4 py-2 text-sm bg-red-900 text-red-400 rounded hover:bg-red-800">Theme: Red Alert</button>
+            </div>
+        </div>
+
+        <div class="mb-6">
+            <h4 class="text-lg font-semibold mb-2 text-info">System Utilities</h4>
+            <a href="https://portfolio.yourdomain.com" target="_blank" class="block w-full px-4 py-2 text-sm text-center bg-red-600 text-white rounded hover:bg-red-500 transition">
+                **Launch Portfolio Subdomain**
+            </a>
+        </div>
+
+        <button id="close-settings-btn" class="absolute top-3 right-3 text-xl text-red-500 hover:text-red-400">
+            &times;
+        </button>
     </div>
 
     <script>
+        const landingPage = document.getElementById('landing-page');
+        const terminalWrapper = document.getElementById('terminal-wrapper');
+        const launchBtn = document.getElementById('launch-btn');
+        const settingsSidebar = document.getElementById('settings-sidebar');
+        const settingsToggleBtn = document.getElementById('settings-toggle');
+        const closeSettingsBtn = document.getElementById('close-settings-btn');
+
         const outputArea = document.getElementById('output-area');
         const inputField = document.getElementById('command-input');
         const promptSpan = document.getElementById('prompt');
+        
+        // **Updated for faster boot:** Default typing speed for command responses
+        const defaultTypingDelay = 30;
+
+        // Sequence of messages displayed on terminal startup
         const simulatedBootSequence = [
             "<span class='info'>[BOOT]</span> Initializing GHOST_SHELL v3.1.2...",
             "<span class='success'>[AUTH]</span> Credentials validated. Access Level: ROOT.",
             "<span class='info'>[NET]</span> Establishing Secure Tunnel (VPN: AURORA).",
             "<span class='success'>[SYSTEM]</span> Environment configured. Memory Allocation: 99%.",
             "Welcome, user. Type <span class='success'>'help'</span> for a list of available commands.",
-            "\n" // Add a blank line before the prompt appears
+            "\n"
         ];
 
         // --- Core Utility Functions ---
 
-        // Function to append text to the output area
         function printLine(text, className = '') {
             const line = document.createElement('div');
             line.className = className;
@@ -132,14 +202,19 @@
             outputArea.appendChild(line);
         }
 
-        // Function to simulate scrolling to the bottom
         function scrollToBottom() {
             outputArea.scrollTop = outputArea.scrollHeight;
         }
 
-        // Function to simulate a delayed typing response
-        function simulateTyping(message, delay = 50) {
+        function simulateTyping(message, delay = defaultTypingDelay) {
             return new Promise(resolve => {
+                // If delay is 0, print immediately
+                if (delay === 0) {
+                    printLine(message);
+                    resolve();
+                    return;
+                }
+
                 let i = 0;
                 let buffer = '';
                 const line = document.createElement('div');
@@ -155,7 +230,7 @@
                         scrollToBottom();
                     } else {
                         clearInterval(typingInterval);
-                        line.innerHTML = buffer; // Remove cursor after finished
+                        line.innerHTML = buffer;
                         resolve();
                     }
                 }, delay);
@@ -170,16 +245,18 @@
             'status': handleStatus,
             'ping': handlePing,
             'exploit': handleExploit,
+            'settings': toggleSettingsSidebar // New command to open settings
         };
 
         async function handleHelp() {
             printLine("Available Simulated Commands:", 'info');
             printLine(`
-  <span class='success'>help</span>           - Displays this list of commands.
-  <span class='success'>clear</span>          - Clears the terminal screen.
-  <span class='success'>status</span>         - Checks the current system metrics.
-  <span class='success'>ping [ip]</span>      - Pings a simulated network address. (e.g., ping 192.168.1.1)
-  <span class='success'>exploit [target]</span> - Initiates a complex hacking simulation. (e.g., exploit mainframe)
+    <span class='success'>help</span>           - Displays this list of commands.
+    <span class='success'>clear</span>          - Clears the terminal screen.
+    <span class='success'>status</span>         - Checks the current system metrics.
+    <span class='success'>ping [ip]</span>      - Pings a simulated network address.
+    <span class='success'>exploit [target]</span> - Initiates a complex hacking simulation.
+    <span class='success'>settings</span>       - Opens the graphical settings panel.
             `);
         }
 
@@ -190,11 +267,11 @@
         async function handleStatus() {
             await simulateTyping("<span class='info'>[QUERYING]</span> Requesting system health report...", 30);
             await simulateTyping(`
-  - CPU Load: 1.5% (Nominal)
-  - Memory Usage: 98% (MAX)
-  - Network Latency: 0.005ms
-  - Active Tunnels: 4
-  - ID: WRAITH-997-ALPHA
+    - CPU Load: 1.5% (Nominal)
+    - Memory Usage: 98% (MAX)
+    - Network Latency: 0.005ms
+    - Active Tunnels: 4
+    - ID: WRAITH-997-ALPHA
             `, 15);
             printLine("<span class='success'>[REPORT]</span> System operational.", 'success');
         }
@@ -211,22 +288,21 @@
         }
 
         async function handleExploit(args) {
-            const target = args[1] || 'Target_System_01';
+            const target = args[1] || 'target_system_01';
             if (!args[1]) {
                 printLine("<span class='error'>[SYNTAX ERROR]</span> Usage: exploit [target]", 'error');
                 return;
             }
 
-            await simulateTyping(`<span class='info'>[ATTEMPT]</span> Initiating multi-stage exploit against ${target}...`, 30);
+            await simulateTyping(`<span class='info'>[ATTEMPT]</span> Initiating multi-stage exploit against ${target}...`, defaultTypingDelay);
             await simulateTyping("Stage 1: Enumerating vulnerabilities...", 50);
 
-            // Simulate progress bar
-            for (let i = 1; i <= 5; i++) {
-                const progress = i * 20;
-                await simulateTyping(`[${'#'.repeat(i)}${'-'.repeat(5 - i)}] ${progress}%`, 10);
+            for (let i = 0; i < 5; i++) {
+                const progress = (i + 1) * 20;
+                await simulateTyping(`[${'#'.repeat(i + 1)}${'-'.repeat(5 - (i + 1))}] ${progress}%`, 10);
             }
 
-            if (target.toLowerCase() === 'mainframe') {
+            if (target.toLowerCase() === 'firewall' || target.toLowerCase() === 'mainframe') {
                 await simulateTyping("<span class='success'>[SUCCESS]</span> Shell established. Persistence achieved.", 20);
                 await simulateTyping(`Target system ${target} compromised. Access Granted.`, 'success');
             } else {
@@ -234,6 +310,50 @@
                 await simulateTyping(`Target ${target} denied access. All traces wiped.`, 'error');
             }
         }
+        
+        // --- New Sidebar Functions ---
+        
+        function toggleSettingsSidebar() {
+            settingsSidebar.classList.toggle('open');
+            if (settingsSidebar.classList.contains('open')) {
+                printLine("<span class='info'>[SYSTEM]</span> Graphical Settings panel launched. Close with 'settings' command or ❌ button.", 'info');
+            } else {
+                printLine("<span class='info'>[SYSTEM]</span> Graphical Settings panel closed.", 'info');
+            }
+        }
+
+        function changeTheme(theme) {
+            const container = document.querySelector('.terminal-container');
+            container.classList.remove('green-theme', 'blue-theme', 'red-theme');
+            container.classList.add(`${theme}-theme`);
+            
+            // Re-apply base styles with dynamic colors
+            let color, border_color;
+            if (theme === 'blue') {
+                color = '#00ffff';
+                border_color = '#00ffff';
+                container.style.boxShadow = '0 0 20px rgba(0, 255, 255, 0.7), inset 0 0 10px rgba(0, 255, 255, 0.3)';
+            } else if (theme === 'red') {
+                color = '#ff6347';
+                border_color = '#ff6347';
+                container.style.boxShadow = '0 0 20px rgba(255, 99, 71, 0.7), inset 0 0 10px rgba(255, 99, 71, 0.3)';
+            } else { // default to green
+                color = '#00ff41';
+                border_color = '#00ff41';
+                container.style.boxShadow = '0 0 20px rgba(0, 255, 65, 0.7), inset 0 0 10px rgba(0, 255, 65, 0.3)';
+            }
+
+            // Apply the new colors
+            document.querySelector('.terminal-theme').style.color = color;
+            document.getElementById('input-line').style.borderTopColor = border_color;
+            container.style.borderColor = border_color;
+
+            printLine(`<span class='info'>[THEME]</span> Theme changed to ${theme.toUpperCase()}.`, 'info');
+        }
+
+        // Add theme function to global scope so it can be called from onclick in HTML
+        window.changeTheme = changeTheme;
+
 
         // --- Main Logic & Event Handling ---
 
@@ -247,43 +367,57 @@
             } else if (cmd) {
                 printLine(`<span class='error'>[ERROR]</span> Command not found: ${cmd}. Type 'help' for options.`, 'error');
             }
-            // If the command is empty, just show a blank line, no error
         }
 
         function handleInput(event) {
             if (event.key === 'Enter') {
                 const command = inputField.value.trim();
                 
-                // Echo the command back to the output
                 printLine(`${promptSpan.textContent} <span class='user-input'>${command}</span>`);
 
-                // Execute the command
                 executeCommand(command);
 
-                // Clear the input field and scroll
                 inputField.value = '';
                 scrollToBottom();
             }
         }
 
-        // --- Initialization ---
-
         async function runBootSequence() {
-            inputField.disabled = true; // Disable input during boot
+            // Only run the boot sequence once
+            if (outputArea.children.length > 0) return;
+
+            inputField.disabled = true;
+
+            // **Updated for faster boot:** Set faster delays for boot
+            const bootTypingDelay = 0; // Virtually instant typing
+            const bootLineDelay = 10; // Very short delay between lines
 
             for (const line of simulatedBootSequence) {
-                await simulateTyping(line, 40);
-                await new Promise(resolve => setTimeout(resolve, 300));
+                await simulateTyping(line, bootTypingDelay); 
+                await new Promise(resolve => setTimeout(resolve, bootLineDelay));
             }
 
-            inputField.disabled = false; // Enable input after boot
-            inputField.focus(); // Focus the input field
+            inputField.disabled = false;
+            inputField.focus();
             inputField.addEventListener('keydown', handleInput);
             scrollToBottom();
         }
 
-        // Start the application
-        document.addEventListener('DOMContentLoaded', runBootSequence);
+        function showTerminal() {
+            // Hide the landing page
+            landingPage.classList.add('hidden');
+            // Show the terminal wrapper
+            terminalWrapper.classList.remove('hidden');
+            terminalWrapper.classList.add('flex');
+
+            runBootSequence();
+        }
+
+        // Attach event listeners
+        launchBtn.addEventListener('click', showTerminal);
+        settingsToggleBtn.addEventListener('click', toggleSettingsSidebar);
+        closeSettingsBtn.addEventListener('click', toggleSettingsSidebar);
+
     </script>
 
 </body>
