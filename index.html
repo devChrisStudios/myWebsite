@@ -3,17 +3,16 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>S Y S T E M | A C C E S S</title>
+    <title>G H O S T - S Y S T E M | C O N S O L E</title>
     <!-- Load Space Mono font for the classic terminal look -->
     <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
     <style>
-        /* Custom CSS for the "Hacker" Aesthetic */
+        /* Custom CSS for the "Hacker" Aesthetic and Layout */
         body, html {
             height: 100%;
             margin: 0;
-            overflow: hidden; /* Prevent scroll bars */
-            background-color: #0d1117; /* Very dark background */
-            color: #00ff41; /* Neon green text */
+            overflow: hidden;
+            background-color: #000000; /* Pure black background */
             font-family: 'Space Mono', monospace;
             display: flex;
             justify-content: center;
@@ -22,136 +21,269 @@
         }
 
         .terminal-container {
-            width: 90%;
-            max-width: 800px;
-            height: 90%;
-            max-height: 600px;
+            width: 95%;
+            max-width: 900px;
+            height: 95%;
+            max-height: 700px;
             border: 2px solid #00ff41;
-            box-shadow: 0 0 15px #00ff41, inset 0 0 15px rgba(0, 255, 65, 0.4); /* Glow effect */
-            padding: 20px;
+            box-shadow: 0 0 20px rgba(0, 255, 65, 0.7), inset 0 0 10px rgba(0, 255, 65, 0.3); /* Intense green glow */
+            background-color: rgba(0, 0, 0, 0.85);
+            display: flex;
+            flex-direction: column;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        /* The main output area */
+        #output-area {
+            flex-grow: 1;
+            padding: 15px;
             overflow-y: auto;
+            color: #00ff41; /* Neon green text */
+            white-space: pre-wrap;
             box-sizing: border-box;
-            background-color: rgba(0, 0, 0, 0.6); /* Semi-transparent black */
-        }
-
-        /* Styling for the blinking cursor */
-        .cursor {
-            font-weight: bold;
-            animation: blink 0.8s infinite;
-        }
-
-        @keyframes blink {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0; }
-        }
-
-        /* The actual output lines */
-        .line {
-            white-space: pre-wrap; /* Preserve formatting but allow wrap */
             line-height: 1.4;
         }
 
-        /* Specific colors for "system messages" */
+        /* The input line */
+        #input-line {
+            display: flex;
+            padding: 10px 15px;
+            border-top: 2px solid #00ff41;
+            background-color: rgba(0, 0, 0, 0.95);
+        }
+
+        #prompt {
+            color: #ffc107; /* Yellow/Amber prompt */
+            margin-right: 5px;
+            user-select: none;
+            flex-shrink: 0;
+        }
+
+        #command-input {
+            flex-grow: 1;
+            background: transparent;
+            border: none;
+            color: #00ff41;
+            font-family: 'Space Mono', monospace;
+            font-size: 14px;
+            outline: none; /* Remove focus outline */
+            caret-color: #00ff41; /* Green cursor */
+            padding: 0;
+        }
+
+        /* Utility classes for themed output */
         .info { color: #87ceeb; } /* Light Blue */
         .success { color: #32cd32; } /* Lime Green */
         .error { color: #ff6347; } /* Tomato Red */
+        .user-input { color: #ffffff; } /* White for echoed command */
+
+        /* Blinking text for realism */
+        .blink {
+            animation: blinker 1s linear infinite;
+        }
+        @keyframes blinker {
+            50% { opacity: 0; }
+        }
 
         /* Responsive adjustments */
         @media (max-width: 600px) {
+            body { font-size: 12px; }
             .terminal-container {
-                width: 95%;
-                height: 95%;
-                padding: 10px;
-                font-size: 12px;
+                width: 100%;
+                height: 100%;
+                border: none;
+                box-shadow: none;
+                border-radius: 0;
             }
-            h1 { font-size: 1.5em; }
         }
     </style>
 </head>
 <body>
 
-    <div id="terminal" class="terminal-container">
-        <div id="output"></div>
+    <div class="terminal-container">
+        <div id="output-area"></div>
+        <div id="input-line">
+            <span id="prompt">C:\\GHOST_SHELL></span>
+            <input type="text" id="command-input" autofocus>
+        </div>
     </div>
 
     <script>
-        // JavaScript for the typewriter/terminal simulation effect
-        const outputElement = document.getElementById('output');
-        const lines = [
-            "<span class='info'>[INITIALIZING]</span> Boot sequence engaged... Checking system integrity.",
-            "<span class='success'>[STATUS]</span> Mainframe connection established. Ping: 0.003ms.",
-            "Attemping secure handshake with Target_System_01...",
-            "<span class='error'>[ACCESS DENIED]</span> Firewall V7.1 detected. Initiating Bypass Protocol: WRAITH.",
-            "...",
-            "Compiling exploit payloads (Trojan: Helios, Worm: Cerberus)...",
-            "<span class='info'>[DATA STREAM]</span> Analyzing packet headers... Decrypting RSA-2048 key block.",
-            "Key successfully extracted: 4B6F-2C9A-0D5E-F7B1",
-            "Establishing unauthorized SSH tunnel on port 22. Status: <span class='success'>CONNECTED</span>.",
-            "Downloading classified file 'Project_Chimera_Manifest.dat' (12.5GB)... 1.2% complete.",
-            "Filtering intrusion detection system logs...",
-            "34% complete. Estimated time to completion: 01:45:22.",
-            "<span class='info'>[WARNING]</span> Secondary Security Daemon activated. Increased latency.",
-            "Rerouting connection through Icelandic proxy (ID: 7421)...",
-            "98% complete. Transfer rate fluctuating...",
-            "<span class='success'>[FILE DOWNLOAD COMPLETE]</span> All traces wiped. Exiting System.",
-            "Connection closed.",
-            "C:\\USER\\CONSOLE> <span class='cursor'>_</span>"
+        const outputArea = document.getElementById('output-area');
+        const inputField = document.getElementById('command-input');
+        const promptSpan = document.getElementById('prompt');
+        const simulatedBootSequence = [
+            "<span class='info'>[BOOT]</span> Initializing GHOST_SHELL v3.1.2...",
+            "<span class='success'>[AUTH]</span> Credentials validated. Access Level: ROOT.",
+            "<span class='info'>[NET]</span> Establishing Secure Tunnel (VPN: AURORA).",
+            "<span class='success'>[SYSTEM]</span> Environment configured. Memory Allocation: 99%.",
+            "Welcome, user. Type <span class='success'>'help'</span> for a list of available commands.",
+            "\n" // Add a blank line before the prompt appears
         ];
 
-        let lineIndex = 0;
-        const typingDelay = 50; // Milliseconds per character
-        const lineDelay = 1000; // Milliseconds between lines
+        // --- Core Utility Functions ---
 
-        // Function to simulate typing out a single line
-        function typeLine(text, callback) {
-            let charIndex = 0;
-            const lineDiv = document.createElement('div');
-            lineDiv.className = 'line';
-            outputElement.appendChild(lineDiv);
+        // Function to append text to the output area
+        function printLine(text, className = '') {
+            const line = document.createElement('div');
+            line.className = className;
+            line.innerHTML = text;
+            outputArea.appendChild(line);
+        }
 
-            function typeChar() {
-                if (charIndex < text.length) {
-                    // Use innerHTML to handle the span tags for coloring
-                    lineDiv.innerHTML += text.charAt(charIndex);
-                    charIndex++;
-                    setTimeout(typeChar, typingDelay);
-                } else {
-                    // Line complete, run the callback (usually to start the next line)
-                    if (callback) {
-                        callback();
+        // Function to simulate scrolling to the bottom
+        function scrollToBottom() {
+            outputArea.scrollTop = outputArea.scrollHeight;
+        }
+
+        // Function to simulate a delayed typing response
+        function simulateTyping(message, delay = 50) {
+            return new Promise(resolve => {
+                let i = 0;
+                let buffer = '';
+                const line = document.createElement('div');
+                line.className = 'line';
+                outputArea.appendChild(line);
+                scrollToBottom();
+
+                const typingInterval = setInterval(() => {
+                    if (i < message.length) {
+                        buffer += message.charAt(i);
+                        line.innerHTML = buffer + (i < message.length - 1 ? "<span class='blink'>|</span>" : "");
+                        i++;
+                        scrollToBottom();
+                    } else {
+                        clearInterval(typingInterval);
+                        line.innerHTML = buffer; // Remove cursor after finished
+                        resolve();
                     }
-                }
-            }
-
-            typeChar();
+                }, delay);
+            });
         }
 
-        // Function to process all lines sequentially
-        function processLines() {
-            if (lineIndex < lines.length) {
-                // If the last line contains the cursor placeholder, handle it differently
-                if (lines[lineIndex].includes("<span class='cursor'>_</span>")) {
-                    const finalLine = document.createElement('div');
-                    finalLine.className = 'line';
-                    finalLine.innerHTML = lines[lineIndex];
-                    outputElement.appendChild(finalLine);
-                    return; // Stop the sequence
-                }
+        // --- Command Handlers ---
 
-                typeLine(lines[lineIndex], () => {
-                    lineIndex++;
-                    // Scroll to the bottom to keep the current line visible
-                    outputElement.scrollTop = outputElement.scrollHeight;
-                    // Wait before starting the next line
-                    setTimeout(processLines, lineDelay);
-                });
+        const commandHandlers = {
+            'help': handleHelp,
+            'clear': handleClear,
+            'status': handleStatus,
+            'ping': handlePing,
+            'exploit': handleExploit,
+        };
+
+        async function handleHelp() {
+            printLine("Available Simulated Commands:", 'info');
+            printLine(`
+  <span class='success'>help</span>           - Displays this list of commands.
+  <span class='success'>clear</span>          - Clears the terminal screen.
+  <span class='success'>status</span>         - Checks the current system metrics.
+  <span class='success'>ping [ip]</span>      - Pings a simulated network address. (e.g., ping 192.168.1.1)
+  <span class='success'>exploit [target]</span> - Initiates a complex hacking simulation. (e.g., exploit mainframe)
+            `);
+        }
+
+        function handleClear() {
+            outputArea.innerHTML = '';
+        }
+
+        async function handleStatus() {
+            await simulateTyping("<span class='info'>[QUERYING]</span> Requesting system health report...", 30);
+            await simulateTyping(`
+  - CPU Load: 1.5% (Nominal)
+  - Memory Usage: 98% (MAX)
+  - Network Latency: 0.005ms
+  - Active Tunnels: 4
+  - ID: WRAITH-997-ALPHA
+            `, 15);
+            printLine("<span class='success'>[REPORT]</span> System operational.", 'success');
+        }
+
+        async function handlePing(args) {
+            const target = args[1] || '127.0.0.1';
+            await simulateTyping(`Pinging ${target} with 32 bytes of data:`, 20);
+
+            for (let i = 0; i < 4; i++) {
+                const time = (Math.random() * 50).toFixed(2);
+                await simulateTyping(`Reply from ${target}: bytes=32 time=${time}ms TTL=64`, 10);
+            }
+            printLine(`\nPing statistics for ${target}: Packets: Sent = 4, Received = 4, Lost = 0 (0% loss)`, 'success');
+        }
+
+        async function handleExploit(args) {
+            const target = args[1] || 'Target_System_01';
+            if (!args[1]) {
+                printLine("<span class='error'>[SYNTAX ERROR]</span> Usage: exploit [target]", 'error');
+                return;
+            }
+
+            await simulateTyping(`<span class='info'>[ATTEMPT]</span> Initiating multi-stage exploit against ${target}...`, 30);
+            await simulateTyping("Stage 1: Enumerating vulnerabilities...", 50);
+
+            // Simulate progress bar
+            for (let i = 1; i <= 5; i++) {
+                const progress = i * 20;
+                await simulateTyping(`[${'#'.repeat(i)}${'-'.repeat(5 - i)}] ${progress}%`, 10);
+            }
+
+            if (target.toLowerCase() === 'mainframe') {
+                await simulateTyping("<span class='success'>[SUCCESS]</span> Shell established. Persistence achieved.", 20);
+                await simulateTyping(`Target system ${target} compromised. Access Granted.`, 'success');
+            } else {
+                await simulateTyping("<span class='error'>[FAILURE]</span> Target system patched. Exploit failed.", 20);
+                await simulateTyping(`Target ${target} denied access. All traces wiped.`, 'error');
             }
         }
 
-        // Start the simulation when the page loads
-        document.addEventListener('DOMContentLoaded', () => {
-            processLines();
-        });
+        // --- Main Logic & Event Handling ---
+
+        function executeCommand(command) {
+            const parts = command.trim().toLowerCase().split(/\s+/);
+            const cmd = parts[0];
+            const args = parts;
+
+            if (commandHandlers[cmd]) {
+                commandHandlers[cmd](args);
+            } else if (cmd) {
+                printLine(`<span class='error'>[ERROR]</span> Command not found: ${cmd}. Type 'help' for options.`, 'error');
+            }
+            // If the command is empty, just show a blank line, no error
+        }
+
+        function handleInput(event) {
+            if (event.key === 'Enter') {
+                const command = inputField.value.trim();
+                
+                // Echo the command back to the output
+                printLine(`${promptSpan.textContent} <span class='user-input'>${command}</span>`);
+
+                // Execute the command
+                executeCommand(command);
+
+                // Clear the input field and scroll
+                inputField.value = '';
+                scrollToBottom();
+            }
+        }
+
+        // --- Initialization ---
+
+        async function runBootSequence() {
+            inputField.disabled = true; // Disable input during boot
+
+            for (const line of simulatedBootSequence) {
+                await simulateTyping(line, 40);
+                await new Promise(resolve => setTimeout(resolve, 300));
+            }
+
+            inputField.disabled = false; // Enable input after boot
+            inputField.focus(); // Focus the input field
+            inputField.addEventListener('keydown', handleInput);
+            scrollToBottom();
+        }
+
+        // Start the application
+        document.addEventListener('DOMContentLoaded', runBootSequence);
     </script>
 
 </body>
