@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>S E C R E T | D O M A I N</title>
+    <title>Project Phoenix</title>
     <!-- Load Tailwind CSS for a modern, responsive main page look -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Load Space Mono font for the classic terminal look -->
@@ -150,8 +150,15 @@
 <!-- APPLYING AMBER THEME TO THE MAIN BODY -->
 <body class="bg-[#0d0101] text-[#ffb861] min-h-screen flex flex-col items-center p-4 font-mono">
     
-    <!-- Top Navigation Bar -->
-    <header class="fixed top-0 right-0 p-4 z-40">
+    <!-- Top Navigation Bar (Updated to span both corners) -->
+    <header class="fixed top-0 left-0 right-0 p-4 z-40 flex justify-between items-center">
+        <!-- Left Section: Portfolio Button -->
+        <div>
+            <a href="https://portfolio.silhouetto.win" target="_blank" class="nav-link uppercase text-sm font-bold">
+                // PORTFOLIO
+            </a>
+        </div>
+        <!-- Right Section: Nav Links -->
         <nav class="space-x-4 text-sm font-bold">
             <a href="#about" class="nav-link">ABOUT</a>
             <a href="#services" class="nav-link">SERVICES</a>
@@ -194,7 +201,7 @@
             <ul class="list-disc list-inside text-lg space-y-3 pl-5">
                 <li class="info-message">REAL-TIME DATA SYNC: Instantaneous data propagation using Firestore.</li>
                 <li class="success-message">COMMAND-LINE INTERFACE: Secure, customized terminal for rapid execution of tasks.</li>
-                <li class="prompt-color">AI QUERY PROTOCOL: High-level system AI for data synthesis and strategic planning (powered by Gemini).</li>
+                <li class="prompt-color">TICKET SUBMISSION PROTOCOL: High-level support and operational ticket routing.</li>
                 <li class="main-color">PERSISTENT STATE MANAGEMENT: User-specific configuration and authentication status.</li>
                 <li class="error-message">GLOBAL STATUS BROADCAST: Public, multi-user status communication channel.</li>
             </ul>
@@ -204,7 +211,7 @@
         <section id="contact" class="py-20 md:py-32 w-full max-w-4xl px-4 mx-auto terminal-theme border-t-2 border-dashed border-[var(--info-color)]">
             <h2 class="text-4xl font-bold mb-6 text-[var(--prompt-color)]">// CONNECTIVITY</h2>
             <div class="text-lg space-y-4">
-                <p>Communication is strictly restricted to authenticated channels. To submit a support or operational ticket, use the floating AI Query button, or execute the 'query' command within the terminal interface.</p>
+                <p>Communication is strictly restricted to authenticated channels. To submit a support or operational ticket, use the floating **Ticket Submission** button, or execute the **'ticket'** command within the terminal interface.</p>
                 <p>For urgent, priority-level communications, transmit directly to the system administrator using the following encrypted hash:</p>
                 <p class="text-xl font-bold text-[var(--error-color)]">HASH: 954A-FF01-C7D3-E6B8</p>
                 <p>Thank you for your cooperation in maintaining the integrity of Project Phoenix operations.</p>
@@ -212,29 +219,36 @@
         </section>
     </main>
 
-    <!-- Floating AI Button (Hackery Look) -->
+    <!-- Floating Ticket Button (Hackery Look) -->
     <button id="ask-float-btn" 
             class="fixed bottom-6 right-6 p-4 rounded-full bg-[#333] text-gray-200 shadow-[0_0_15px_#93d6e5]
                    hover:bg-[#20b2aa] transition duration-300 z-50">
+        <!-- Re-purposed SVG icon -->
         <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" viewBox="0 0 20 20" fill="currentColor">
-            <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd" />
+            <path d="M10 2a8 8 0 100 16 8 8 0 000-16zm-1 9a1 1 0 112 0v2a1 1 0 11-2 0v-2zm1-5a1 1 0 011 1v2a1 1 0 11-2 0V7a1 1 0 011-1z" />
         </svg>
     </button>
     
-    <!-- Ask AI Modal (Hidden by Default) -->
+    <!-- Ticket Modal (Hidden by Default) -->
     <div id="ask-modal-wrapper" class="fixed inset-0 bg-black bg-opacity-75 hidden items-center justify-center z-[100]">
         <div class="bg-[#0d0101] p-6 rounded-xl shadow-[0_0_20px_#ffb861] w-11/12 md:w-1/2 lg:w-1/3 border-2 border-[#ffb861]">
             <div class="flex justify-between items-center mb-4">
-                <h3 class="text-xl font-bold text-[#93d6e5]">// AI_QUERY_PROTOCOL</h3>
+                <h3 class="text-xl font-bold text-[#93d6e5]">// TICKET_SUBMISSION_PROTOCOL</h3>
                 <button id="ask-modal-close" class="text-[#ff6347] hover:text-white">&times;</button>
             </div>
-            <textarea id="ask-modal-input" class="w-full h-24 p-3 bg-black text-[#00ff41] border border-[#ffb861] rounded-md focus:outline-none focus:ring-1 focus:ring-[#93d6e5]" placeholder="Enter your high-level system query..."></textarea>
+
+            <!-- NEW: Email Input Field -->
+            <input type="email" id="ask-modal-email" 
+                   class="w-full p-3 mb-3 bg-black text-[#93d6e5] border border-[#ffb861] rounded-md focus:outline-none focus:ring-1 focus:ring-[#93d6e5]" 
+                   placeholder="Response Email Address (required)" required>
+
+            <textarea id="ask-modal-input" class="w-full h-24 p-3 bg-black text-[#00ff41] border border-[#ffb861] rounded-md focus:outline-none focus:ring-1 focus:ring-[#93d6e5]" placeholder="Enter your support or operational ticket details..."></textarea>
             <p id="modal-response" class="mt-4 text-sm text-[#ffb861] min-h-[20px] whitespace-pre-wrap"></p>
             <button id="ask-modal-submit" class="mt-4 w-full bg-[#ffb861] text-black font-bold py-2 rounded-md hover:bg-[#ff8c4a] transition">
-                EXECUTE QUERY
+                SUBMIT TICKET
             </button>
             <div id="modal-loading-indicator" class="mt-4 hidden text-center text-[#93d6e5]">
-                // PROCESSING... <span class="typing-effect"></span>
+                // TRANSMITTING TICKET... <span class="typing-effect"></span>
             </div>
         </div>
     </div>
@@ -322,10 +336,6 @@
         import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getFirestore, doc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-        // Gemini API configuration
-        const apiKey = ""; 
-        const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`;
-
         // Global variables provided by the Canvas environment
         const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
         const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {};
@@ -360,6 +370,7 @@
         const askFloatBtn = document.getElementById('ask-float-btn');
         const askModalWrapper = document.getElementById('ask-modal-wrapper');
         const askModalClose = document.getElementById('ask-modal-close');
+        const askModalEmail = document.getElementById('ask-modal-email'); // NEW: Email input
         const askModalInput = document.getElementById('ask-modal-input');
         const askModalSubmit = document.getElementById('ask-modal-submit');
         const modalResponse = document.getElementById('modal-response');
@@ -534,9 +545,19 @@
         // --- Utility Functions ---
 
         /**
+         * Simple email validation helper.
+         * @param {string} email 
+         * @returns {boolean}
+         */
+        function isValidEmail(email) {
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            return emailRegex.test(email);
+        }
+
+        /**
          * Converts plain text into HTML for terminal output, handling newlines.
-         * @param {string} text 
-         * @returns {string} HTML content
+         * @param {string} text The plain text message.
+         * @returns {string} HTML content.
          */
         function formatOutput(text) {
             return text.replace(/\n/g, '<br>');
@@ -631,7 +652,7 @@
             
             const parts = command.trim().split(/\s+/);
             const cmd = parts[0] ? parts[0].toLowerCase() : '';
-            const args = parts.slice(1).join(' ');
+            const args = command.trim().substring(cmd.length).trim(); // Keep full argument string
 
             if (!command.trim()) {
                 // Do nothing for empty command
@@ -644,8 +665,8 @@
                 printTerminalMessage('// CONFIGURATION PANEL DISPLAYED.', 'info');
             } else if (cmd === 'exit') {
                 hideTerminal();
-            } else if (cmd === 'query') {
-                handleQueryCommand(args);
+            } else if (cmd === 'ticket') { 
+                handleTicketCommand(args);
             } else if (cmd === 'status') {
                 handleStatusCommand(args);
             } else {
@@ -673,86 +694,48 @@
 
 
         /**
-         * Handles the 'query' command for inline AI interaction.
-         * @param {string} query The user's prompt.
+         * Handles the 'ticket' command for inline ticket submission.
+         * @param {string} fullArgs The full argument string containing [email] and [details].
          */
-        async function handleQueryCommand(query) {
-            if (!query) {
-                printTerminalMessage('// ERROR: Query command requires a prompt. Usage: query [prompt]', 'error');
+        async function handleTicketCommand(fullArgs) { 
+            // Regex to capture the first non-space argument (email) and the rest (details)
+            const argsMatch = fullArgs.match(/^(\S+)\s+(.*)$/s); 
+
+            if (!argsMatch) {
+                printTerminalMessage('// ERROR: Ticket command requires an email and details. Usage: ticket [email] [details]', 'error');
                 return;
             }
+            
+            const email = argsMatch[1];
+            const ticketDetails = argsMatch[2].trim();
+
+            if (!isValidEmail(email)) {
+                printTerminalMessage('// ERROR: Invalid email format for response address.', 'error');
+                return;
+            }
+            if (!ticketDetails) {
+                printTerminalMessage('// ERROR: Ticket details cannot be empty.', 'error');
+                return;
+            }
+
             isProcessing = true;
-            printTerminalMessage('// AI_PROTOCOL_ENGAGED: PROCESSING_QUERY...', 'info');
+            printTerminalMessage('// TICKET_PROTOCOL_ENGAGED: SUBMITTING_TICKET...', 'info');
 
-            try {
-                const systemPrompt = "You are a restricted command-line interface AI. Respond concisely and technically, or in a cryptic, sci-fi style. Do not use conversational language like 'I am' or 'Hello'. Summarize results in 1-2 sentences unless the request explicitly asks for detail.";
-                
-                const payload = {
-                    contents: [{ parts: [{ text: query }] }],
-                    tools: [{ "google_search": {} }],
-                    systemInstruction: { parts: [{ text: systemPrompt }] },
-                };
+            // Simulate network delay for ticket submission
+            await new Promise(resolve => setTimeout(resolve, 1500 + Math.random() * 1000));
+            
+            const ticketId = Math.random().toString(36).substring(2, 10).toUpperCase();
 
-                const response = await fetchWithRetry(apiUrl, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(payload)
-                });
+            printTerminalMessage('// TICKET_RESPONSE_RECEIVED:', 'success');
+            printTerminalMessage(`// TICKET_ID: ${ticketId} SUBMITTED.`);
+            printTerminalMessage(`// RESPONSE_ADDRESS: ${email}`); // NEW: Display email
+            printTerminalMessage(`// DESCRIPTION: "${ticketDetails}"`);
+            printTerminalMessage(`// STATUS: Pending administrator review. Do not submit duplicates.`);
 
-                const result = await response.json();
-                const text = result.candidates?.[0]?.content?.parts?.[0]?.text || "// AI_PROTOCOL_FAILURE: UNKNOWN RESPONSE ERROR.";
-                
-                printTerminalMessage('// AI_RESPONSE_RECEIVED:', 'success');
-                printTerminalMessage(text);
-                
-                // Extract and display grounding sources if available
-                const groundingMetadata = result.candidates?.[0]?.groundingMetadata;
-                if (groundingMetadata && groundingMetadata.groundingAttributions) {
-                    const sources = groundingMetadata.groundingAttributions
-                        .map(attr => attr.web?.title)
-                        .filter(title => title);
 
-                    if (sources.length > 0) {
-                        printTerminalMessage(`// DATA_SOURCE(S): ${sources.join(' | ')}`, 'info');
-                    }
-                }
-
-            } catch (error) {
-                printTerminalMessage(`// AI_PROTOCOL_FAILURE: Connection Error - ${error.message}`, 'error');
-            } finally {
-                isProcessing = false;
-                terminalOutput.scrollTop = terminalOutput.scrollHeight;
-                commandInput.focus();
-            }
-        }
-
-        /**
-         * Exponential backoff utility for fetch requests.
-         * @param {string} url 
-         * @param {object} options 
-         * @param {number} retries 
-         * @returns {Promise<Response>}
-         */
-        async function fetchWithRetry(url, options, retries = 3) {
-            for (let i = 0; i < retries; i++) {
-                try {
-                    const response = await fetch(url, options);
-                    if (!response.ok) {
-                        if (i === retries - 1) throw new Error(`HTTP error! status: ${response.status}`);
-                        // Don't retry on 4xx errors, but will retry on 5xx or network issues
-                        if (response.status >= 400 && response.status < 500) {
-                            throw new Error(`Client error: status ${response.status}`);
-                        }
-                        await new Promise(resolve => setTimeout(resolve, Math.pow(2, i) * 1000));
-                    } else {
-                        return response;
-                    }
-                } catch (error) {
-                    if (i === retries - 1) throw error;
-                    await new Promise(resolve => setTimeout(resolve, Math.pow(2, i) * 1000));
-                }
-            }
-            throw new Error('Fetch failed after multiple retries.');
+            isProcessing = false;
+            terminalOutput.scrollTop = terminalOutput.scrollHeight;
+            commandInput.focus();
         }
 
         /**
@@ -764,7 +747,7 @@
 //   help     - Display this command list.
 //   clear    - Clear the terminal screen.
 //   settings - Toggle the configuration panel for visual tuning.
-//   query    - Execute an AI system query. Usage: query [prompt]
+//   ticket   - Submit a support or operational ticket. Usage: ticket [email] [details]
 //   status   - Update the public global status. Usage: status [message]
 //   exit     - Close the terminal interface.
 `;
@@ -967,14 +950,15 @@
         }
 
 
-        // --- Modal AI Query Functions ---
+        // --- Modal Ticket Submission Functions ---
 
         function showAskModal() {
             askModalWrapper.classList.remove('hidden');
             askModalWrapper.classList.add('flex');
             askModalInput.focus();
+            askModalEmail.value = ''; // Clear email input
+            askModalInput.value = ''; // Clear details input
             modalResponse.innerHTML = '';
-            askModalInput.value = '';
         }
 
         function closeAskModal() {
@@ -983,43 +967,53 @@
             modalLoadingIndicator.classList.add('hidden');
         }
 
-        async function handleModalAsk() {
+        async function handleModalAsk() { 
+            const email = askModalEmail.value.trim();
             const query = askModalInput.value.trim();
-            if (!query) return;
+            
+            // VALIDATION
+            if (!email || !isValidEmail(email)) {
+                modalResponse.innerHTML = `<span class="text-[#ff6347]">// ERROR: Invalid or missing email address for response.</span>`;
+                askModalEmail.focus();
+                return;
+            }
+            if (!query) {
+                modalResponse.innerHTML = `<span class="text-[#ff6347]">// ERROR: Ticket details cannot be empty.</span>`;
+                askModalInput.focus();
+                return;
+            }
 
             askModalInput.disabled = true;
+            askModalEmail.disabled = true;
             askModalSubmit.disabled = true;
             modalResponse.innerHTML = '';
             modalLoadingIndicator.classList.remove('hidden');
 
             try {
-                const systemPrompt = "You are a highly capable AI assistant specializing in conceptualizing and providing technical outlines, creative ideas, and detailed explanations. Provide a thoughtful and complete response to the user's high-level query.";
+                // Simulate network delay for ticket submission
+                await new Promise(resolve => setTimeout(resolve, 1500 + Math.random() * 1000));
                 
-                const payload = {
-                    contents: [{ parts: [{ text: query }] }],
-                    tools: [{ "google_search": {} }],
-                    systemInstruction: { parts: [{ text: systemPrompt }] },
-                };
+                const ticketId = Math.random().toString(36).substring(2, 10).toUpperCase();
 
-                const response = await fetchWithRetry(apiUrl, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(payload)
-                });
+                const successMessage = `
+// TICKET SUBMITTED SUCCESSFULLY.
+// TICKET ID: ${ticketId}
+// RESPONSE ADDRESS: ${email}
+// DESCRIPTION: "${query.substring(0, 50)}..."
+// STATUS: Awaiting assignment. A system agent will process your request shortly.
+                `;
 
-                const result = await response.json();
-                const text = result.candidates?.[0]?.content?.parts?.[0]?.text || "[[ ERROR: Failed to retrieve a structured response from the system. ]]";
-                
-                modalResponse.innerHTML = formatOutput(text);
+                modalResponse.innerHTML = formatOutput(successMessage);
 
             } catch (error) {
-                modalResponse.innerHTML = `<span class="text-[#ff6347]">[[ ERROR: Connection failure or API error. Check console for details. ]]</span>`;
-                console.error('Modal API Error:', error);
+                modalResponse.innerHTML = `<span class="text-[#ff6347]">[[ ERROR: System failure during ticket transmission. Check your connection. ]]</span>`;
+                console.error('Modal Ticket Error:', error);
             } finally {
                 modalLoadingIndicator.classList.add('hidden');
                 askModalInput.disabled = false;
+                askModalEmail.disabled = false;
                 askModalSubmit.disabled = false;
-                askModalInput.focus();
+                // Keep the modal open to allow the user to read the response
             }
         }
 
