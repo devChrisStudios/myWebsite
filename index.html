@@ -78,7 +78,7 @@
         /* Styling for different message types */
         .info-message { color: var(--info-color); }
         .success-message { color: var(--success-color); }
-        .error-message { color: var(--error-message); }
+        .error-message { color: var(--error-color); }
         .typing-effect::after {
             content: '_';
             animation: blink 0.7s infinite;
@@ -112,7 +112,7 @@
             box-shadow: 0 0 5px var(--prompt-color);
         }
         
-        /* Utility class to display truncated user ID on hover */
+        /* Utility class to display truncated user ID on hover (No longer used, but kept for potential future use) */
         .user-id-display:hover .full-user-id {
             display: block;
         }
@@ -199,11 +199,10 @@
         <section id="services" class="py-20 md:py-32 w-full max-w-4xl px-4 mx-auto terminal-theme bg-black/10 border-t-2 border-dashed border-[var(--info-color)]">
             <h2 class="text-4xl font-bold mb-6 text-[var(--prompt-color)]">// ACTIVE_MODULES</h2>
             <ul class="list-disc list-inside text-lg space-y-3 pl-5">
-                <li class="info-message">REAL-TIME DATA SYNC: Instantaneous data propagation using Firestore.</li>
+                <!-- Removed Real-Time Sync and Global Status as they required Firebase -->
                 <li class="success-message">COMMAND-LINE INTERFACE: Secure, customized terminal for rapid execution of tasks.</li>
                 <li class="prompt-color">TICKET SUBMISSION PROTOCOL: High-level support and operational ticket routing.</li>
                 <li class="main-color">PERSISTENT STATE MANAGEMENT: User-specific configuration and authentication status.</li>
-                <li class="error-message">GLOBAL STATUS BROADCAST: Public, multi-user status communication channel.</li>
             </ul>
         </section>
 
@@ -262,14 +261,10 @@
             
             <!-- Terminal Header/Menu Bar -->
             <div class="terminal-header p-2 text-sm">
-                <!-- Left Section: Status -->
+                <!-- Left Section: Status (Removed User/System Status) -->
                 <div class="flex space-x-4 items-center">
-                    <span id="user-display" class="font-bold relative user-id-display">
-                        // USER_ID: [PENDING] 
-                        <span class="full-user-id"></span>
-                    </span>
-                    <span id="system-status-display" class="text-[var(--info-color)]">
-                        // STATUS: OFFLINE
+                    <span class="font-bold">
+                        // PROJECT_PHOENIX_TERMINAL
                     </span>
                 </div>
                 <!-- Right Section: Control Buttons -->
@@ -331,27 +326,13 @@
 
     <!-- JavaScript Logic -->
     <script type="module">
-        // --- Firebase Imports ---
-        import { initializeApp, setLogLevel } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, doc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        // --- All Firebase code has been removed ---
 
-        // Global variables provided by the Canvas environment
-        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
-        const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {};
-        const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
-        
-        // --- NEW: Target Email Address ---
+        // --- Target Email Address ---
         const ADMIN_EMAIL = 'devchrisstudios@gmail.com'; 
         
-        // --- NEW: Maximum length for the ticket details (to prevent URL overflow errors on deployment) ---
+        // --- Maximum length for the ticket details (to prevent URL overflow errors on deployment) ---
         const MAX_TICKET_LENGTH = 1000;
-
-        // Firebase state variables
-        let db;
-        let auth;
-        let userId = null;
-        let isAuthReady = false;
 
         // --- DOM Elements ---
         const terminalWrapper = document.getElementById('terminal-wrapper');
@@ -365,8 +346,6 @@
         const saveSettingsBtn = document.getElementById('save-settings-btn');
         const landingPage = document.getElementById('landing-page');
         const terminalContainer = document.getElementById('terminal-container');
-        const userDisplay = document.getElementById('user-display');
-        const systemStatusDisplay = document.getElementById('system-status-display');
         
         // Terminal control buttons
         const rebootBtn = document.getElementById('reboot-btn');
@@ -415,158 +394,6 @@
                 name: 'Electric Cyan'
             }
         };
-
-        // --- Firebase Initialization and Auth ---
-
-        async function initFirebase() {
-            if (isAuthReady) return; // Prevent double initialization
-
-            try {
-                // setLogLevel('Debug'); // Enable for debugging
-                const app = initializeApp(firebaseConfig);
-                db = getFirestore(app);
-                auth = getAuth(app);
-                
-                // --- NEW LOGGING: Display the current domain/origin ---
-                console.log("// FIREBASE DEBUG: Current document origin is:", window.location.origin);
-                console.log("// FIREBASE DEBUG: If app is deployed, ensure this domain is added to Firebase Authorized Domains.");
-                // --- END NEW LOGGING ---
-
-                await new Promise((resolve) => {
-                    // We must wait for the initial auth state check to complete
-                    const unsubscribe = onAuthStateChanged(auth, async (user) => {
-                        unsubscribe(); // Stop listening after the first check
-
-                        if (user) {
-                            userId = user.uid;
-                        } else {
-                            // If no user, sign in using the custom token or anonymously
-                            if (initialAuthToken) {
-                                try {
-                                    const customUser = await signInWithCustomToken(auth, initialAuthToken);
-                                    userId = customUser.user.uid;
-                                } catch (e) {
-                                    console.error("Custom token sign-in failed, signing in anonymously:", e);
-                                    const anonUser = await signInAnonymously(auth);
-                                    userId = anonUser.user.uid;
-                                }
-                            } else {
-                                // Fallback to anonymous sign-in if no token is available
-                                const anonUser = await signInAnonymously(auth);
-                                userId = anonUser.user.uid;
-                            }
-                        }
-
-                        // FINAL Fallback for userId if everything else failed (shouldn't happen with the current setup)
-                        if (!userId) {
-                             userId = crypto.randomUUID();
-                             printTerminalMessage("// WARNING: ANONYMOUS ID GENERATED. AUTHENTICATION FAILED.", 'error');
-                        }
-
-                        isAuthReady = true;
-                        resolve();
-                    });
-                });
-                
-                // Update the UI with the final user ID
-                updateUserDisplay(userId);
-                
-                // Start listening for public data once authenticated and database is ready
-                if (db && userId) {
-                    listenForStatusUpdates();
-                }
-
-            } catch (error) {
-                console.error("Firebase initialization or authentication failed:", error);
-                printTerminalMessage(`// ERROR: FIREBASE INIT FAILED - ${error.message}`, 'error');
-                isAuthReady = true; // Still allow app to function locally if possible
-            }
-        }
-        
-        /**
-         * Updates the UI to show the current user ID.
-         * @param {string} id The user's full ID.
-         */
-        function updateUserDisplay(id) {
-            const shortId = id.substring(0, 8) + '...';
-            userDisplay.innerHTML = `
-                // USER_ID: ${shortId}
-                <span class="full-user-id">// FULL ID: ${id}</span>
-            `;
-            // Re-select and update the full ID element if it exists in the new structure
-            const newFullUserIdSpan = document.querySelector('#user-display .full-user-id');
-            if(newFullUserIdSpan) {
-                newFullUserIdSpan.textContent = `// FULL ID: ${id}`;
-            }
-        }
-
-        // --- Firestore Real-Time Functionality ---
-
-        /**
-         * The document reference for the public status message.
-         * We store the public status in a dedicated document that everyone can read.
-         */
-        function getStatusDocRef() {
-            // Path: /artifacts/{appId}/public/data/status_data/global_status
-            return doc(db, 'artifacts', appId, 'public', 'data', 'status_data', 'global_status');
-        }
-
-        /**
-         * Updates the public status message in Firestore.
-         * @param {string} message The status message to set.
-         */
-        async function updateStatus(message) {
-            // CRUCIAL: Add guards against uninitialized DB access
-            if (!db || !userId) {
-                printTerminalMessage('// ERROR: FIREBASE NOT READY. Authentication or Database failed to load.', 'error');
-                return;
-            }
-
-            try {
-                await setDoc(getStatusDocRef(), {
-                    message: message,
-                    timestamp: new Date().getTime(),
-                    userId: userId 
-                });
-                printTerminalMessage(`// STATUS_UPDATE_SUCCESS: Status set to "${message}"`, 'success');
-            } catch (error) {
-                printTerminalMessage(`// ERROR: Failed to save status - ${error.message}`, 'error');
-                console.error("Firestore Error:", error);
-            }
-        }
-
-        /**
-         * Sets up the real-time listener for the public status message.
-         */
-        function listenForStatusUpdates() {
-            // CRUCIAL: Add guards against uninitialized DB access
-            if (!db || !userId) return;
-
-            onSnapshot(getStatusDocRef(), (docSnapshot) => {
-                if (docSnapshot.exists()) {
-                    const data = docSnapshot.data();
-                    const statusMessage = data.message || 'IDLE';
-                    const timestamp = new Date(data.timestamp).toLocaleTimeString();
-                    const sourceId = data.userId ? data.userId.substring(0, 8) + '...' : 'SYSTEM';
-
-                    // Update the header display
-                    systemStatusDisplay.textContent = `// STATUS: ${statusMessage}`;
-                    
-                    // Announce the status change in the terminal output
-                    if (terminalWrapper.classList.contains('flex')) {
-                        printTerminalMessage(`[${timestamp}][${sourceId}] > GLOBAL STATUS: "${statusMessage}"`, 'info');
-                    }
-                } else {
-                    systemStatusDisplay.textContent = '// STATUS: IDLE';
-                    // Initialize the status document if it doesn't exist
-                    updateStatus('Operational');
-                }
-            }, (error) => {
-                printTerminalMessage(`// ERROR: Real-time status sync failed - ${error.message}`, 'error');
-                console.error("Firestore Listen Error:", error);
-            });
-        }
-
 
         // --- Utility Functions ---
 
@@ -626,17 +453,10 @@
          * Runs the asynchronous boot sequence when the terminal launches.
          */
         async function runBootSequence() {
-            // Ensure Firebase is initialized and auth is complete before proceeding
-            if (!isAuthReady) {
-                await initFirebase();
-            }
-
             const bootMessages = [
                 '// INITIALIZING CORE SYSTEM...',
-                '// AUTHENTICATING USER ID: ' + userId.substring(0, 8) + '...',
-                '// DECRYPTING USER DATA...',
-                '// ESTABLISHING REAL-TIME FIREBASE CONNECTION...',
-                '// CONNECTION_PROTOCOL ESTABLISHED.',
+                '// AUTHENTICATING LOCAL USER...',
+                '// LOCAL SESSION ESTABLISHED.',
                 '// WELCOME. TYPE "help" FOR AVAILABLE COMMANDS.'
             ];
 
@@ -645,7 +465,7 @@
             printTerminalMessage('[[ SYSTEM BOOT SEQUENCE INITIATED ]]', 'info');
             
             for (const msg of bootMessages) {
-                await new Promise(resolve => setTimeout(resolve, 300 + Math.random() * 500));
+                await new Promise(resolve => setTimeout(resolve, 250 + Math.random() * 300));
                 printTerminalMessage(msg);
             }
 
@@ -693,30 +513,11 @@
                 hideTerminal();
             } else if (cmd === 'ticket') { 
                 handleTicketCommand(args);
-            } else if (cmd === 'status') {
-                handleStatusCommand(args);
             } else {
                 printTerminalMessage(`// ERROR: Command not found: "${cmd}". Type "help" for a list of available commands.`, 'error');
             }
             
             terminalOutput.scrollTop = terminalOutput.scrollHeight;
-        }
-
-        /**
-         * Handles the 'status' command for persistent data update.
-         * @param {string} statusMessage The message to set as the public status.
-         */
-        function handleStatusCommand(statusMessage) {
-            if (!statusMessage) {
-                printTerminalMessage('// ERROR: Status command requires a message. Usage: status [message]', 'error');
-                return;
-            }
-            // CRUCIAL: Add guards against uninitialized DB access
-            if (!db || !userId) {
-                printTerminalMessage('// ERROR: System initialization pending. Cannot perform database operation. This usually means your website\'s domain needs to be added to Firebase Authorized Domains in the console.', 'error');
-                return;
-            }
-            updateStatus(statusMessage);
         }
 
         /**
@@ -729,7 +530,6 @@
 //   clear    - Clear the terminal screen.
 //   settings - Toggle the configuration panel for visual tuning.
 //   ticket   - Submit a support or operational ticket. Usage: ticket [email] [details] (Max ${MAX_TICKET_LENGTH} chars)
-//   status   - Update the public global status. Usage: status [message]
 //   exit     - Close the terminal interface.
 `;
             printTerminalMessage(helpText, 'info');
@@ -747,7 +547,6 @@
             const body = encodeURIComponent(
                 `Source: ${source} Interface\n` +
                 `Response Email: ${email}\n` +
-                `User ID: ${userId}\n` + // Sending full ID in body for tracking
                 `----------------------------------\n` +
                 `TICKET DETAILS:\n${details}`
             );
@@ -837,7 +636,7 @@
          */
         function showTerminal() {
             landingPage.classList.add('hidden');
-            askFloatBtn.classList.remove('hidden');
+            askFloatBtn.classList.add('hidden'); // Hide float button when terminal is open
             
             // Hide the main page content (sections) while terminal is open
             document.querySelector('main').classList.add('hidden');
@@ -855,7 +654,7 @@
          */
         function hideTerminal() {
             landingPage.classList.remove('hidden');
-            askFloatBtn.classList.add('hidden');
+            askFloatBtn.classList.remove('hidden'); // Show float button when terminal is closed
             
             // Show the main page content (sections) when terminal is closed
             document.querySelector('main').classList.remove('hidden');
@@ -1114,7 +913,7 @@
         rebootBtn.addEventListener('click', runBootSequence);
         closeTerminalBtn.addEventListener('click', hideTerminal);
         
-        // New Ask AI button and modal listeners
+        // Ticket button and modal listeners
         askFloatBtn.addEventListener('click', showAskModal);
         askModalClose.addEventListener('click', closeAskModal);
         askModalSubmit.addEventListener('click', handleModalAsk);
@@ -1126,7 +925,7 @@
         });
         
         loadSavedSettings();
-        initFirebase(); // Initialize Firebase on page load
+        // No initFirebase() call needed anymore
 
     </script>
 
