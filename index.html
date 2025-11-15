@@ -78,7 +78,7 @@
         /* Styling for different message types */
         .info-message { color: var(--info-color); }
         .success-message { color: var(--success-color); }
-        .error-message { color: var(--error-color); }
+        .error-message { color: var(--error-message); }
         .typing-effect::after {
             content: '_';
             animation: blink 0.7s infinite;
@@ -426,6 +426,11 @@
                 const app = initializeApp(firebaseConfig);
                 db = getFirestore(app);
                 auth = getAuth(app);
+                
+                // --- NEW LOGGING: Display the current domain/origin ---
+                console.log("// FIREBASE DEBUG: Current document origin is:", window.location.origin);
+                console.log("// FIREBASE DEBUG: If app is deployed, ensure this domain is added to Firebase Authorized Domains.");
+                // --- END NEW LOGGING ---
 
                 await new Promise((resolve) => {
                     // We must wait for the initial auth state check to complete
@@ -708,10 +713,26 @@
             }
             // CRUCIAL: Add guards against uninitialized DB access
             if (!db || !userId) {
-                printTerminalMessage('// ERROR: System initialization pending. Cannot perform database operation.', 'error');
+                printTerminalMessage('// ERROR: System initialization pending. Cannot perform database operation. This usually means your website\'s domain needs to be added to Firebase Authorized Domains in the console.', 'error');
                 return;
             }
             updateStatus(statusMessage);
+        }
+
+        /**
+         * Displays the help message in the terminal.
+         */
+        function showHelp() {
+            const helpText = `
+// AVAILABLE COMMANDS:
+//   help     - Display this command list.
+//   clear    - Clear the terminal screen.
+//   settings - Toggle the configuration panel for visual tuning.
+//   ticket   - Submit a support or operational ticket. Usage: ticket [email] [details] (Max ${MAX_TICKET_LENGTH} chars)
+//   status   - Update the public global status. Usage: status [message]
+//   exit     - Close the terminal interface.
+`;
+            printTerminalMessage(helpText, 'info');
         }
 
         /**
@@ -787,22 +808,6 @@
             isProcessing = false;
             terminalOutput.scrollTop = terminalOutput.scrollHeight;
             commandInput.focus();
-        }
-
-        /**
-         * Displays the help message in the terminal.
-         */
-        function showHelp() {
-            const helpText = `
-// AVAILABLE COMMANDS:
-//   help     - Display this command list.
-//   clear    - Clear the terminal screen.
-//   settings - Toggle the configuration panel for visual tuning.
-//   ticket   - Submit a support or operational ticket. Usage: ticket [email] [details] (Max ${MAX_TICKET_LENGTH} chars)
-//   status   - Update the public global status. Usage: status [message]
-//   exit     - Close the terminal interface.
-`;
-            printTerminalMessage(helpText, 'info');
         }
 
         // --- UI/Event Handlers ---
