@@ -343,6 +343,9 @@
         
         // --- NEW: Target Email Address ---
         const ADMIN_EMAIL = 'devchrisstudios@gmail.com'; 
+        
+        // --- NEW: Maximum length for the ticket details (to prevent URL overflow errors on deployment) ---
+        const MAX_TICKET_LENGTH = 1000;
 
         // Firebase state variables
         let db;
@@ -700,32 +703,32 @@
         }
 
         /**
-         * Constructs and opens a Gmail compose link to simulate sending the ticket.
+         * Constructs and opens a STANDARD mailto link to simulate sending the ticket.
+         * FIX: Switched from Gmail-specific URL to standard mailto link to improve deployment stability.
          * @param {string} email User's response email.
          * @param {string} details The ticket message body.
          * @param {string} source 'Terminal' or 'Modal'
          * @returns {string} The success message to display.
          */
         function sendTicketViaMailto(email, details, source) {
-            const subject = encodeURIComponent(`[Project Phoenix Ticket] New submission from ${email}`);
+            const subject = encodeURIComponent(`[Project Phoenix Ticket] Submission from ${source} - ${email}`);
             const body = encodeURIComponent(
                 `Source: ${source} Interface\n` +
                 `Response Email: ${email}\n` +
-                `User ID: ${userId.substring(0, 16)}...\n` +
+                `User ID: ${userId}\n` + // Sending full ID in body for tracking
                 `----------------------------------\n` +
                 `TICKET DETAILS:\n${details}`
             );
 
-            // NEW: Use the Gmail compose link format to open Gmail directly
-            const gmailLink = `https://mail.google.com/mail/?view=cm&fs=1&to=${ADMIN_EMAIL}&su=${subject}&body=${body}`;
+            // Use the standard mailto protocol
+            const mailtoLink = `mailto:${ADMIN_EMAIL}?subject=${subject}&body=${body}`;
             
-            // Open Gmail in a new tab
-            window.open(gmailLink, '_blank');
+            // Open the mail client in a new tab/window
+            window.open(mailtoLink, '_blank');
             
-            return `// TICKET_PROTOCOL_ENGAGED: Gmail has been launched in a new tab.
+            return `// TICKET_PROTOCOL_ENGAGED: Your default mail client has been launched in a new tab/window.
 // RECIPIENT: ${ADMIN_EMAIL}
-// STATUS: Awaiting 'Send' action in the Gmail window.
-// NOTE: You must click 'Send' in the new window/tab to complete transmission.`;
+// STATUS: Awaiting 'Send' action in your mail client.`;
         }
 
         /**
@@ -742,7 +745,7 @@
             }
             
             const email = argsMatch[1];
-            const ticketDetails = argsMatch[2].trim();
+            let ticketDetails = argsMatch[2].trim();
 
             if (!isValidEmail(email)) {
                 printTerminalMessage('// ERROR: Invalid email format for response address.', 'error');
@@ -753,10 +756,18 @@
                 return;
             }
 
+            // --- URL Length Check for stability on deployment ---
+            if (ticketDetails.length > MAX_TICKET_LENGTH) {
+                printTerminalMessage(`// ERROR: Ticket details exceed maximum length of ${MAX_TICKET_LENGTH} characters. Please shorten the description.`, 'error');
+                return;
+            }
+            // --- End Length Check ---
+
+
             isProcessing = true;
             printTerminalMessage('// TICKET_PROTOCOL_ENGAGED: PREPARING_TRANSMISSION...', 'info');
 
-            // 1. Send via mailto link (now opens Gmail)
+            // 1. Send via mailto link (now opens standard mail client)
             const successMessage = sendTicketViaMailto(email, ticketDetails, 'Terminal');
             
             // 2. Display success message
@@ -776,7 +787,7 @@
 //   help     - Display this command list.
 //   clear    - Clear the terminal screen.
 //   settings - Toggle the configuration panel for visual tuning.
-//   ticket   - Submit a support or operational ticket. Usage: ticket [email] [details]
+//   ticket   - Submit a support or operational ticket. Usage: ticket [email] [details] (Max ${MAX_TICKET_LENGTH} chars)
 //   status   - Update the public global status. Usage: status [message]
 //   exit     - Close the terminal interface.
 `;
@@ -1032,6 +1043,15 @@
                 return;
             }
 
+            // --- URL Length Check for stability on deployment (Kept as a safeguard) ---
+            if (query.length > MAX_TICKET_LENGTH) {
+                modalResponse.innerHTML = `<span class="text-[#ff6347]">// ERROR: Ticket details exceed maximum length of ${MAX_TICKET_LENGTH} characters. Please shorten the description.</span>`;
+                askModalInput.focus();
+                return;
+            }
+            // --- End Length Check ---
+
+
             askModalInput.disabled = true;
             askModalEmail.disabled = true;
             askModalSubmit.disabled = true;
@@ -1039,12 +1059,12 @@
             modalLoadingIndicator.classList.remove('hidden');
 
             try {
-                // Use the new mailto function (now opens Gmail)
+                // Use the standard mailto function
                 const successMessage = sendTicketViaMailto(email, query, 'Modal');
 
                 modalResponse.innerHTML = formatOutput(successMessage);
                 
-                // --- NEW TWEAK: Clear and Close on Success ---
+                // TWEAK: Clear and Close on Success after a short delay
                 setTimeout(() => {
                     askModalEmail.value = ''; // Clear email
                     askModalInput.value = ''; // Clear details
@@ -1052,14 +1072,15 @@
                 }, 4000); // Give the user 4 seconds to read the success message
 
             } catch (error) {
-                modalResponse.innerHTML = `<span class="text-[#ff6347]">[[ ERROR: System failure during email link generation. ]]</span>`;
-                console.error('Modal Ticket Error:', error);
+                // Log the actual error to the console for detailed debugging
+                console.error('Modal Ticket Error (Deployment Check):', error);
+                modalResponse.innerHTML = `<span class="text-[#ff6347]">[[ ERROR: System failure during email link generation. Check console for details. ]]</span>`;
             } finally {
                 modalLoadingIndicator.classList.add('hidden');
                 askModalInput.disabled = false;
                 askModalEmail.disabled = false;
                 askModalSubmit.disabled = false;
-                // Note: The modal closure is now handled by the setTimeout inside the try block
+                // Note: The modal closure is handled by the setTimeout inside the try block
             }
         }
 
