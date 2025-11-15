@@ -419,6 +419,8 @@
         // --- Firebase Initialization and Auth ---
 
         async function initFirebase() {
+            if (isAuthReady) return; // Prevent double initialization
+
             try {
                 // setLogLevel('Debug'); // Enable for debugging
                 const app = initializeApp(firebaseConfig);
@@ -426,26 +428,34 @@
                 auth = getAuth(app);
 
                 await new Promise((resolve) => {
-                    onAuthStateChanged(auth, async (user) => {
+                    // We must wait for the initial auth state check to complete
+                    const unsubscribe = onAuthStateChanged(auth, async (user) => {
+                        unsubscribe(); // Stop listening after the first check
+
                         if (user) {
                             userId = user.uid;
                         } else {
-                            // If no user, sign in anonymously if no custom token is provided
-                            if (!initialAuthToken) {
+                            // If no user, sign in using the custom token or anonymously
+                            if (initialAuthToken) {
+                                try {
+                                    const customUser = await signInWithCustomToken(auth, initialAuthToken);
+                                    userId = customUser.user.uid;
+                                } catch (e) {
+                                    console.error("Custom token sign-in failed, signing in anonymously:", e);
+                                    const anonUser = await signInAnonymously(auth);
+                                    userId = anonUser.user.uid;
+                                }
+                            } else {
+                                // Fallback to anonymous sign-in if no token is available
                                 const anonUser = await signInAnonymously(auth);
                                 userId = anonUser.user.uid;
                             }
                         }
-                        
-                        // Use custom token if provided, this handles the main sign-in
-                        if (initialAuthToken && !user) {
-                            const customUser = await signInWithCustomToken(auth, initialAuthToken);
-                            userId = customUser.user.uid;
-                        }
 
+                        // FINAL Fallback for userId if everything else failed (shouldn't happen with the current setup)
                         if (!userId) {
-                             // Fallback in case of authentication failure
                              userId = crypto.randomUUID();
+                             printTerminalMessage("// WARNING: ANONYMOUS ID GENERATED. AUTHENTICATION FAILED.", 'error');
                         }
 
                         isAuthReady = true;
@@ -456,15 +466,15 @@
                 // Update the UI with the final user ID
                 updateUserDisplay(userId);
                 
-                // Start listening for public data once authenticated
-                if (isAuthReady) {
+                // Start listening for public data once authenticated and database is ready
+                if (db && userId) {
                     listenForStatusUpdates();
                 }
 
             } catch (error) {
                 console.error("Firebase initialization or authentication failed:", error);
                 printTerminalMessage(`// ERROR: FIREBASE INIT FAILED - ${error.message}`, 'error');
-                isAuthReady = true; // Still allow app to function locally
+                isAuthReady = true; // Still allow app to function locally if possible
             }
         }
         
@@ -474,7 +484,6 @@
          */
         function updateUserDisplay(id) {
             const shortId = id.substring(0, 8) + '...';
-            const fullUserIdSpan = document.querySelector('#user-display .full-user-id');
             userDisplay.innerHTML = `
                 // USER_ID: ${shortId}
                 <span class="full-user-id">// FULL ID: ${id}</span>
@@ -502,8 +511,9 @@
          * @param {string} message The status message to set.
          */
         async function updateStatus(message) {
-            if (!isAuthReady || !db) {
-                printTerminalMessage('// ERROR: FIREBASE NOT READY. Try launching again.', 'error');
+            // CRUCIAL: Add guards against uninitialized DB access
+            if (!db || !userId) {
+                printTerminalMessage('// ERROR: FIREBASE NOT READY. Authentication or Database failed to load.', 'error');
                 return;
             }
 
@@ -524,7 +534,8 @@
          * Sets up the real-time listener for the public status message.
          */
         function listenForStatusUpdates() {
-            if (!isAuthReady || !db) return;
+            // CRUCIAL: Add guards against uninitialized DB access
+            if (!db || !userId) return;
 
             onSnapshot(getStatusDocRef(), (docSnapshot) => {
                 if (docSnapshot.exists()) {
@@ -610,7 +621,7 @@
          * Runs the asynchronous boot sequence when the terminal launches.
          */
         async function runBootSequence() {
-            // Re-initialize Firebase connection if necessary, but typically this is only needed once.
+            // Ensure Firebase is initialized and auth is complete before proceeding
             if (!isAuthReady) {
                 await initFirebase();
             }
@@ -695,8 +706,9 @@
                 printTerminalMessage('// ERROR: Status command requires a message. Usage: status [message]', 'error');
                 return;
             }
-            if (!isAuthReady) {
-                printTerminalMessage('// ERROR: System initialization pending. Try again in a moment.', 'error');
+            // CRUCIAL: Add guards against uninitialized DB access
+            if (!db || !userId) {
+                printTerminalMessage('// ERROR: System initialization pending. Cannot perform database operation.', 'error');
                 return;
             }
             updateStatus(statusMessage);
@@ -704,7 +716,6 @@
 
         /**
          * Constructs and opens a STANDARD mailto link to simulate sending the ticket.
-         * FIX: Switched from Gmail-specific URL to standard mailto link to improve deployment stability.
          * @param {string} email User's response email.
          * @param {string} details The ticket message body.
          * @param {string} source 'Terminal' or 'Modal'
